@@ -1,0 +1,384 @@
+/* Simple CSS Reset */
+html {
+    box-sizing: border-box;
+    font-size: 62.5%; /* This sets the font size to 10px, making 'rem' units easier to manage */
+}
+
+*, *::before, *::after {
+    box-sizing: inherit; /* Inherit box-sizing from html to ensure consistency across the website */
+    margin: 0; /* Remove default margins */
+    padding: 0; /* Remove default paddings */
+    border: 0; /* Remove default borders */
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    line-height: 1.6; /* Default line height */
+    color: #333; /* Default text color */
+}
+
+ul, ol {
+    list-style: none; /* Remove default list styles */
+}
+
+a {
+    text-decoration: none; /* Remove default text decoration for links */
+    color: inherit; /* Link color inherits from parent */
+}
+
+img {
+    max-width: 100%; /* Make images responsive */
+    height: auto; /* Maintain aspect ratio */
+}
+
+/* end staging and reset */
+
+body {
+    background-color: #2469B3;
+}
+
+header {
+    width: 100%;
+    height: 100px;
+    height: auto;
+    background-color: #143D6A;
+    display: flex;
+    box-shadow: 0px 6px 3px 1px rgba(0, 0, 0, 0.5);
+}
+
+.headLogo {
+    background-color: #FFFFFF;
+    width: 15%;
+    left: 0;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 2;
+    
+}
+
+.headLogo img {
+    padding: 20px 35px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 3;
+}
+
+.logoDiamond {
+    height: 54px;
+    width: 54px;
+    background-color: #FFFFFF;
+    position: absolute;
+    right: -12px;
+    top: 20px;
+    z-index: 1;
+    transform: rotate(45deg);
+}
+
+.container {
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+}
+
+.sideMenu {
+    width: 15%;
+    min-height: 70vh;
+    background-color: #2E79CA;
+    border-right: 3px solid #1C5B91; 
+    border-bottom: 3px solid #1C5B91;
+    position: absolute;
+    left: 0;
+    z-index: 10;
+    transition: left 0.9s ease;
+}
+
+.sideMenu li a {
+    font-size: 1.8rem;
+    color: #FFFFFF;
+    margin-left: 20px;
+    line-height: 3.5rem;
+}
+
+.slideTab {
+    width: 40px;
+    height: 85px;
+    background-color: #2E79CA;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: -40px;
+    border-right: 3px solid #1C5B91; 
+    border-bottom: 3px solid #1C5B91;
+    border-top: 3px solid #1C5B91;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.circle {
+    position: absolute;
+    top: 50%; /* Vertical center */
+    right: -32px; /* Align with the tab */
+    width: 34px; /* Circle size */
+    height: 34px;
+    background-color: #D9D9D9; /* Example color */
+    border-radius: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.9s ease; /* Smooth rotation effect */
+}
+
+.circle::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border: 10px solid transparent;
+    border-right-color: black; /* Triangle color */
+    border-left: 0;
+    transform: translate(-50%, -50%);
+}
+
+.open .sideMenu {
+    left: -15% !important; /* Slide out */
+}
+
+/* Styling for when the circle is rotated */
+.rotated .circle {
+    transform: translateY(-50%) rotate(180deg); /* Rotate 180 degrees */
+}
+
+#pageTitle {
+    margin-left: 50px;
+    top: 30px;
+    color: #FFFFFF;
+    font-size: 2.2rem;
+    position: absolute;
+}
+
+#hamburger-menu {
+    cursor: pointer;
+    position: relative;
+    top: 27px;
+    left: 82%;
+  }
+  
+  #hamburger-menu .bar1, #hamburger-menu .bar2, #hamburger-menu .bar3 {
+    width: 35px;
+    height: 5px;
+    background-color: white;
+    margin: 6px 0;
+    transition: 0.4s;
+  }
+  
+  /* Animation styles */
+  .change .bar1 {
+    -webkit-transform: rotate(-45deg) translate(-9px, 6px);
+    transform: rotate(-45deg) translate(-9px, 6px);
+  }
+  
+  .change .bar2 {opacity: 0;}
+  
+  .change .bar3 {
+    -webkit-transform: rotate(45deg) translate(-8px, -8px);
+    transform: rotate(45deg) translate(-8px, -8px);
+  }
+
+  #menu-box {
+    position: absolute;
+    right: 0;
+    top: 0px;
+    width: 250px;
+    max-height: 0;
+    background-color: #2E79CA;
+    overflow: hidden;
+    transition: max-height 0.9s ease;
+    display: flex;
+    flex-direction: column;
+    font-size: 1.8rem;
+    color: #FFFFFF;
+    z-index: 99;
+}
+
+#menu-box p {
+    padding: 30px 20px;
+    font-size: 1.6rem;
+    color: #FFFFFF;
+    text-align: center;
+}
+
+#contentBody {
+    width: 85%;
+    /*height: 100vh;*/
+    position: absolute;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    transition: width 0.9s ease-in-out;
+}
+
+#loginForm {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    top: 25vh;
+    border-style: solid;
+    border-width: 4px;
+    border-color: #d3d3d3 #696969 #696969 #d3d3d3;
+    border-radius: 10px;
+    background-color: #143D6A;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    font-size: 1.6rem;
+    text-align: center;
+    align-items: center;
+    width: 45%;
+}
+
+#loginForm input {
+    font-size: 1.6rem;
+    text-align: center;
+    padding: 10px 5px;
+    margin: 20px;
+    width: 50%;
+}
+
+#loginForm input:first-child {
+    margin-top: 80px;
+}
+
+#loginForm button {
+    font-size: 1.6rem;
+    text-align: center;
+    width: 28%;
+    padding: 15px 5px;
+    margin-bottom: 80px;
+    margin-top: 20px;
+}
+
+.formHeader {
+    color: #FFFFFF;
+    font-size: 2.2rem;
+    padding: 25px 0;
+}
+
+.dropLink {
+    padding: 10px;
+}
+
+.highcharts-root {
+    font-size: 1.6rem !important;
+}
+
+table {
+    width: 85%;
+    border-collapse: collapse;
+    border-radius: 15px;
+    overflow: hidden; /* Ensures the border-radius applies to the table */
+    margin-top: 50px;
+}
+
+thead {
+    background-color: darkgrey;
+}
+
+thead th {
+    color: white;
+    font-size: 2.2rem;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: lightgrey;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Very light grey */
+}
+
+td {
+    font-size: 1.6rem;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    text-align: left; /* Aligns text to the left in table cells */
+    padding-left: 15px;
+}
+
+#menuContent form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#menuContent form .subButt {
+    width: 60%;
+    padding: 15px 0;
+    background-color: #143D6A;
+    color: white;
+    border: 3px solid #6AACF3;
+}
+
+#menuContent form .resButt {
+    width: 60%;
+    padding: 15px 0;
+    background-color: #ce0f0f;
+    color: white;
+    border: 3px solid #535455;
+}
+
+#menuContent form > * {
+    margin: 10px 0px;
+    border-radius: 5px;
+    padding-left: 10px;
+}
+
+#menuContent form div > * {
+    padding: 10px 15px;
+    border-radius: 5px;
+    width: 95%;
+}
+
+#menuContent form h4 {
+    font-size: 1.5rem;
+}
+
+#menuContent form div {
+    width: 100%;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    margin-top: 25px;
+  }
+  
+  .pagination a, .pagination span, .entries-info {
+    margin: 0 5px;
+    padding: 5px 10px;
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.6rem;
+    border: 2px solid transparent; /* Adjust color as needed */
+  }
+  
+  .pagination a:hover, .pagination .current-page {
+    background-color: #1100ff; /* Adjust color as needed */
+    border-color: #666; /* Adjust color as needed */
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
+  }
+  
+  .pagination-prev, .pagination-next {
+    font-weight: bold;
+  }
+
+  .countWrap {
+    width: 100%;
+    text-align: center;
+  }

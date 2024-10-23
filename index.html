@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A brief description of your page">
+    <title>Emerge-N-See Control Suite Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="/img/ensportalico.png">
+    
+    <script src="./highChart/code/highcharts.js"></script>
+    <script src="./highChart/modules/series-label.js"></script>
+    <script src="./highChart/modules/exporting.js"></script>
+    <script src="./highChart/modules/export-data.js"></script>
+    <script src="./highChart/modules/accessibility.js"></script>
+</head>
+<body>
+    <script src="helpers/headLoad.js"></script>
+    <header>
+        <div class="headLogo">
+            <div>
+                <img src="img/enslogo.png" />
+                <div class="logoDiamond"></div>
+            </div>
+        </div>
+        <div>
+            <h4 id="pageTitle"></h4>
+        </div>
+        <div id="hamburger-menu" onclick="toggleMenu(this); toggleMenuBox();">
+            <div class="bar1"></div>
+            <div class="bar2"></div>
+            <div class="bar3"></div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="sideMenu">
+            <div class="slideTab" onclick="toggleDiv()"></div>
+            <div class="circle" onclick="toggleDiv()"></div>
+                <div id="menuContent">
+                    <ul>
+                        <li><a>ENS Documentation</a></li>
+                        <li><a>Super Admin Login Help</a></li>
+                    </ul>
+                </div>
+            </div>
+        <div id="contentBody"></div>
+        <div id="menu-box">
+            <p>Login to get your available menu options.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>Footer content, like contact info or copyright notices.</p>
+    </footer>
+
+    <!--<script src="routs.js"></script>-->
+    <script src="login.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
