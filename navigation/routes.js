@@ -30,7 +30,7 @@ export function handleRouteChange(event) {
 
 async function loadModule(modulePath) {
   try {
-    const module = await import(`./pages/${modulePath}.js`);
+    const module = await import(`../pages/${modulePath}.js`);
     if (module && module.loadPage) {
       module.loadPage(); // Assuming each module exports a loadPage function
     }

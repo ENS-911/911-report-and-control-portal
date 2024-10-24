@@ -51,9 +51,10 @@ class State {
 
 // Export a global state instance
 export const globalState = new State({
-  clientData: null,   // Non-bulk data, e.g., client profile info
-  mainData: [],       // Placeholder for paged data fetched from the server
-  userData: null,     // Additional non-bulk user-specific data
+  clientData: null,
+  mainData: null,
+  activeData: [],  // Store active incidents
+  todayData: [],   // Store today's incidents
 });
 
 // Function to initialize data fetching or pagination
