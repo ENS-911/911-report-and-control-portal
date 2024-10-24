@@ -382,3 +382,42 @@ td {
     width: 100%;
     text-align: center;
   }
+
+  #menuContent {
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  #menuContent input, #menuContent select {
+    padding: 10px 15px;
+    border-radius: 5px;
+    width: 95%;
+    margin: 0 auto;
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
+
+  #menuContent label {
+    font-size: 1.8rem;
+    color: white;
+    margin-left: 5px;
+  }
+
+  #menuContent button {
+    padding: 5px 15px;
+    background-color: #143D6A;
+    color: white;
+    font-size: 1.8rem;
+    border-radius: 5px;
+    border: 1px solid black;
+    margin: 0 auto;
+  }
+
+  #reportDateRangeSelector, #customDateInput {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }

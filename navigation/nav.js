@@ -30,6 +30,7 @@ function getLinksByPermission(permissionLevel) {
   const baseLinks = [
     { href: 'home', text: 'Home' },
     { href: 'reports', text: 'Reports' },
+    { href: 'reportBuilder', text: 'Report Builder' },
   ];
 
   if (permissionLevel === 'admin') {

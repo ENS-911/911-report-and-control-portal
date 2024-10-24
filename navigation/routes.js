@@ -4,6 +4,7 @@ window.addEventListener('popstate', handleRouteChange);
 const routeConfig = {
   home: { module: 'home', title: 'Home' },
   reports: { module: 'reports', title: 'Reports' },
+  reportBuilder: { module: 'reportBuilder', title: 'Report Builder' },
   page2: { module: 'page2', title: 'Page 2' },
 };
 
