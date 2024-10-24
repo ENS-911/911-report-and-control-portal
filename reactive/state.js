@@ -12,7 +12,8 @@ class State {
   // Set new state, merging with existing state
   setState(newState) {
     this.state = { ...this.state, ...newState };
-    this.notifyListeners();
+    console.log('Updated Global State:', this.state);  // Log the updated state
+    this.notifyListeners();  // Notify listeners about the state update
   }
 
   // Subscribe to state changes

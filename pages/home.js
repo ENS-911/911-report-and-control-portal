@@ -54,17 +54,17 @@ async function fetchActiveCalls() {
   }
 }
 
-// Fetch and store today's data in global state
 async function fetchTodaysData() {
   try {
-    const url = `https://client-control.911-ens-services.com/today/${clientKey}`; // Updated URL for today's data
+    const url = `https://matrix.911-ens-services.com/today/${userData.key}`;
     const response = await fetch(url);
-    const todayData = await response.json();
-
+    
     if (response.ok) {
+      const todayData = await response.json();  // Ensure body is parsed here
+      console.log('Today\'s Data:', todayData);  // Log the parsed data
       globalState.setState({ todayData });  // Store today’s data in global state
     } else {
-      console.error('Error fetching today\'s data:', todayData.error);
+      console.error('Error fetching today\'s data:', response.statusText);
     }
   } catch (error) {
     console.error('Error fetching today\'s data:', error);
@@ -74,6 +74,9 @@ async function fetchTodaysData() {
 // Update the chart with new data
 function updateChart() {
   console.log('Interval callback executed');
+
+  fetchActiveCalls();
+  fetchTodaysData();
 
   const state = globalState.getState();
   const currentTime = new Date().getTime();
