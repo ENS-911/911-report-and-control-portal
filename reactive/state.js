@@ -34,7 +34,7 @@ class State {
     try {
       const response = await fetch(`${endpoint}?${new URLSearchParams(params)}`);
       const data = await response.json();
-      return data;  // Handle pagination on the backend
+      return data;  // Handle pagination or filtering on the backend
     } catch (error) {
       console.error('Error fetching data from server:', error);
       return null;
@@ -48,6 +48,15 @@ class State {
       this.setState({ mainData: data });  // Only store the current chunk of data
     }
   }
+
+  // Method to load report data based on filters
+  async loadReportData(clientKey, filters = {}) {
+    const endpoint = `/report/${clientKey}`;
+    const reportData = await this.fetchDataFromServer(endpoint, filters);
+    if (reportData) {
+      this.setState({ reportData });  // Store fetched report data in state
+    }
+  }
 }
 
 // Export a global state instance
@@ -56,6 +65,7 @@ export const globalState = new State({
   mainData: null,
   activeData: [],  // Store active incidents
   todayData: [],   // Store today's incidents
+  reportData: [],  // Store report data
 });
 
 // Function to initialize data fetching or pagination

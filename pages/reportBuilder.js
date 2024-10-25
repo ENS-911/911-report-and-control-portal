@@ -91,37 +91,68 @@ function handleDateRangeChange() {
 }
 
 async function fetchReportData() {
-  const dateRangeSelector = document.getElementById('dateRangeSelector').value;
-  let reportFilters = {};  // Collect filters
-
-  // Collect custom inputs based on the selected date range
-  if (dateRangeSelector === 'selectHours') {
-    const hoursInput = document.getElementById('hoursInput').value;
-    reportFilters.hours = hoursInput;
-  } else if (dateRangeSelector === 'selectDateRange') {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    reportFilters.startDate = startDate;
-    reportFilters.endDate = endDate;
-  } else {
-    reportFilters.dateRange = dateRangeSelector;  // Store selected date range
-  }
-
-  // Fetch the data from the server based on filters
-  try {
-    const response = await fetch(`/api/reportData?${new URLSearchParams(reportFilters)}`);
-    const reportData = await response.json();
-
-    // Store fetched data in global state
-    globalState.setState({ reportData });
-    console.log('Fetched report data:', reportData);
-
-    // Display the report data in the content area
-    displayReportData(reportData);
-  } catch (error) {
-    console.error('Error fetching report data:', error);
-  }
-}
+    const dateRangeSelector = document.getElementById('dateRangeSelector').value;
+    let reportFilters = {};  // Collect filters
+  
+    // Collect your report filters (e.g., date range, hours, etc.)
+    if (dateRangeSelector === 'selectHours') {
+      const hoursInput = document.getElementById('hoursInput').value;
+      reportFilters.hours = hoursInput;
+    } else if (dateRangeSelector === 'selectDateRange') {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+  
+      if (!startDate || !endDate) {
+        alert('Please select both start and end dates.');
+        return;
+      }
+  
+      reportFilters.startDate = startDate;
+      reportFilters.endDate = endDate;
+    } else {
+      reportFilters.dateRange = dateRangeSelector;  // Predefined date range
+    }
+  
+    // Fetch the client key from state
+    const state = globalState.getState();
+    const clientKey = state.clientData?.key;
+  
+    if (!clientKey) {
+      console.error('Client key not found in state');
+      return;
+    }
+  
+    // Fetch the data from the server based on the filters and client key
+    try {
+      const queryParams = new URLSearchParams(reportFilters).toString();
+      const response = await fetch(`https://client-control.911-ens-services.com/report/${clientKey}?${queryParams}`);
+  
+      // Log the full response for debugging purposes
+      console.log('Full response:', response);
+  
+      if (!response.ok) {
+        // Capture status and status text for easier debugging
+        console.error(`Network response was not ok. Status: ${response.status}, StatusText: ${response.statusText}`);
+        
+        // Optionally, try to read error details if the server provides them
+        const errorDetails = await response.json().catch(() => ({})); // Handle potential JSON parse error
+        console.error('Error details:', errorDetails);
+  
+        throw new Error('Network response was not ok');
+      }
+  
+      const reportData = await response.json();
+  
+      // Store fetched data in global state
+      globalState.setState({ reportData });
+      console.log('Fetched report data:', reportData);
+  
+      // Display the report data in the content area
+      displayReportData(reportData);
+    } catch (error) {
+      console.error('Error fetching report data:', error);
+    }
+}  
 
 function displayReportData(data) {
   const contentBody = document.getElementById('contentBody');
