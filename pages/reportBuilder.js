@@ -16,12 +16,12 @@ export function loadPage() {
       <option value="agencyReport">Agency Report</option>
       <option value="agencyComparisonReport">Agency Comparison Report</option>
       <option value="departmentReport">Department Report</option>
-      <option value="departmentComparisonReports">Department Comparison Reports</option>
+      <option value="departmentComparisonReport">Department Comparison Report</option>
       <option value="incidentTypeReport">Incident Type Report</option>
       <option value="specificIncidentReport">Specific Incident Report</option>
       <option value="responseTimeReport">Response Time Report</option>
-      <option value="timeReports">Time Reports</option>
-      <option value="timeOfDayReports">Time of Day Reports</option>
+      <option value="timeReport">Time Report</option>
+      <option value="timeOfDayReport">Time of Day Report</option>
       <option value="unitNumberReport">Unit # Report</option>
     </select>
     <div id="reportDateRangeSelector" style="display: none;"></div>
@@ -29,7 +29,15 @@ export function loadPage() {
 
   // Initialize the report type selector event
   document.getElementById('reportTypeSelector').addEventListener('change', (e) => {
-    selectReportType(e.target.value);
+    const reportType = e.target.value;
+    globalState.setState({ selectedReportType: reportType });  // Set report type in global state
+    selectReportType(reportType); // Pass the report type value
+  });
+
+  globalState.subscribe(state => {
+    if (state.reportData && state.selectedReportType) {
+      loadForm(state.selectedReportType, state.reportData);
+    }
   });
 }
 
@@ -62,7 +70,7 @@ function selectReportType(reportType) {
   `;
 
   document.getElementById('dateRangeSelector').addEventListener('change', handleDateRangeChange);
-  document.getElementById('fetchReportData').addEventListener('click', fetchReportData);
+  document.getElementById('fetchReportData').addEventListener('click', () => fetchReportData(reportType));
 }
 
 function handleDateRangeChange() {
@@ -90,7 +98,7 @@ function handleDateRangeChange() {
   }
 }
 
-async function fetchReportData() {
+async function fetchReportData(reportType, reportData) {
   const dateRangeSelector = document.getElementById('dateRangeSelector').value;
   let reportFilters = {};  // Collect filters
 
@@ -122,6 +130,8 @@ async function fetchReportData() {
   const state = globalState.getState();
   const clientKey = state.clientData?.key;
 
+  //loadForm(reportType, reportData);
+
   if (!clientKey) {
     console.error('Client key not found in state');
     return;
@@ -130,60 +140,44 @@ async function fetchReportData() {
   // Fetch the data from the server based on the filters and client key
   try {
     const queryParams = new URLSearchParams(reportFilters).toString();
-    console.log('Query Params: ', queryParams);
-
     const response = await fetch(`https://matrix.911-ens-services.com/report/${clientKey}?${queryParams}`);
-
-    // Log the full response for debugging purposes
-    console.log('Full response:', response);
-
+    
     if (!response.ok) {
-      // Capture status and status text for easier debugging
-      console.error(`Network response was not ok. Status: ${response.status}, StatusText: ${response.statusText}`);
-      
-      // Optionally, try to read error details if the server provides them
-      const errorDetails = await response.json().catch(() => ({})); // Handle potential JSON parse error
-      console.error('Error details:', errorDetails);
-
+      const errorDetails = await response.json().catch(() => ({}));
+      console.error('Error fetching report data:', errorDetails);
       throw new Error('Network response was not ok');
     }
 
     const reportData = await response.json();
+    
+    // Update the global state with the fetched data
+    globalState.setState({
+      reportData,
+      selectedReportType: document.getElementById('reportTypeSelector').value, // Set the selected report type
+    });
 
-    // Store fetched data in global state
-    globalState.setState({ reportData });
     console.log('Fetched report data:', reportData);
+    
+    // Load the form with the fetched report data
+    //loadForm(globalState.getState().selectedReportType, reportData);
 
-    // Display the report data in the content area
-    displayReportData(reportData);
   } catch (error) {
     console.error('Error fetching report data:', error);
   }
 }
 
-function displayReportData(data) {
-  const contentBody = document.getElementById('contentBody');
-  contentBody.innerHTML = '';  // Clear previous content
+async function loadForm(reportType, data) {
+  try {
+    // Log the report type and data to ensure they're correct
+    console.log(`Loading form for ${reportType} with data:`, data);
 
-  if (data.length === 0) {
-    contentBody.innerHTML = '<p>No data available for the selected criteria.</p>';
-    return;
+    // Dynamically import the form module based on the report type
+    const formModule = await import(`../forms/${reportType}Form.js`);
+
+    // Call the form rendering function, passing the data
+    formModule.renderForm(data);
+
+  } catch (error) {
+    console.error(`Error loading form for ${reportType}:`, error);
   }
-
-  // Assuming data is an array of objects
-  const table = document.createElement('table');
-
-  data.forEach((item) => {
-    const row = document.createElement('tr');
-
-    Object.values(item).forEach((value) => {
-      const cell = document.createElement('td');
-      cell.textContent = value;
-      row.appendChild(cell);
-    });
-
-    table.appendChild(row);
-  });
-
-  contentBody.appendChild(table);  // Append the table to the content body
 }
