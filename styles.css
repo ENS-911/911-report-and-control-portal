@@ -421,3 +421,35 @@ td {
     flex-direction: column;
     justify-content: center;
   }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    margin: 20px auto;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ccc;
+    background-color: #fff;
+    page-break-after: always;
+    overflow: hidden;
+  }
+  
+  .page:last-child {
+    page-break-after: auto;
+  }
+  
+  .table-container {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .table-container th, .table-container td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+  
+  .table-header {
+    background-color: #f2f2f2;
+  }
+  
