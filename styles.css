@@ -423,33 +423,145 @@ td {
   }
 
   .page {
-    width: 8.5in;
-    height: 11in;
+    width: 90%;
+    max-width: 90%; /* Ensure it doesn't exceed the container width */
+    aspect-ratio: 210 / 297; /* A4 aspect ratio */
     margin: 20px auto;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #ccc;
+    padding: 20px; /* Adjust as needed */
+    box-sizing: border-box;
+    position: relative;
     background-color: #fff;
     page-break-after: always;
-    overflow: hidden;
-  }
-  
-  .page:last-child {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ccc;
+    overflow: visible;
+}
+
+.page:last-child {
     page-break-after: auto;
-  }
-  
-  .table-container {
+}
+
+.table-container {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-  }
-  
-  .table-container th, .table-container td {
+}
+
+.table-container th, .table-container td {
     padding: 8px;
     border: 1px solid #ddd;
-  }
-  
-  .table-header {
+}
+
+.table-header {
     background-color: #f2f2f2;
-  }
-  
+}
+
+/* Add this to your CSS file or style tags */
+tr, td, th {
+    page-break-inside: avoid;
+}
+
+/* Table Styles */
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    page-break-inside: auto;
+}
+
+.report-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+}
+
+.report-table thead {
+    display: table-header-group; /* Ensures header repeats */
+}
+
+.report-table tbody {
+    display: table-row-group;
+}
+
+.report-table th, .report-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+/* Ensure headings don't break onto new pages alone */
+h1, h2 {
+    page-break-after: avoid;
+}
+
+/* Adjust for on-screen display */
+@media screen {
+    .page {
+        width: 100%;
+        /*max-width: 210mm;*/
+        margin: 0 auto;
+        padding: 20px; /* Use pixels for on-screen padding */
+        box-sizing: border-box;
+    }
+}
+
+/* Print styles */
+@media print {
+    @page {
+        size: auto; /* Use the current page size */
+        margin: 20mm; /* Adjust margins as needed */
+    }
+}
+
+/* Prevent page breaks inside elements */
+h1, h2, p, table, tr, td, th {
+    page-break-inside: avoid;
+}
+
+/* Allow page breaks after certain elements */
+h1, h2 {
+    page-break-after: avoid;
+}
+
+/* Ensure tables can break across pages */
+table {
+    page-break-inside: auto;
+}
+
+/* Repeat table headers on new pages */
+thead {
+    display: table-header-group;
+}
+
+/* Base styles */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Page styling */
+.page {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 2vw; /* Use viewport width units */
+    box-sizing: border-box;
+    background-color: #fff;
+    overflow: visible;
+}
+
+/* Maintain aspect ratio using padding trick */
+.page::before {
+    content: '';
+    display: block;
+    padding-top: calc(297 / 210 * 100%); /* A4 aspect ratio */
+}
+
+/* Content wrapper to overlay on the aspect ratio box */
+.page-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 2vw;
+    box-sizing: border-box;
+}

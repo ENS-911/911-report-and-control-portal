@@ -1,104 +1,85 @@
+// Adjusted TableComponent.js
 export function TableComponent({ title, data }) {
-    const formContentArea = document.getElementById('formContentArea');
-  
-    if (!formContentArea) {
-        console.error('Form content area not found!');
-        return;
-    }
-  
-    // Maximum height for each page in pixels (assuming ~11 inches, adjust based on actual pixel size for your setup)
-    const maxPageHeight = 1000;  // Adjust as needed for your actual form height
+    // Create table container
+    const tableContainer = document.createElement('div');
+    tableContainer.style.width = '100%';
+    tableContainer.style.marginTop = '20px';
+
+    // Create and add table title
+    const tableTitle = document.createElement('h2');
+    tableTitle.textContent = title;
+    tableContainer.appendChild(tableTitle);
 
     // Create table element
-    let table = document.createElement('table');
-    table.style.width = '100%';
-    table.style.borderCollapse = 'collapse';
-    table.style.marginTop = '10px';
-  
+    const table = document.createElement('table');
+    table.classList.add('report-table');
+
     // Add table header
+    const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     const headers = ['Agency Type', 'Battalion', 'Creation Date', 'Premise', 'Description'];
+
     headers.forEach(headerText => {
         const headerCell = document.createElement('th');
         headerCell.textContent = headerText;
         headerCell.style.border = '1px solid #ddd';
         headerCell.style.padding = '8px';
         headerCell.style.backgroundColor = '#f2f2f2';
+        headerCell.style.textAlign = 'left'; // Ensure consistent alignment
         headerRow.appendChild(headerCell);
     });
-    table.appendChild(headerRow);
 
-    // Track the height of the current page content
-    let currentPageHeight = table.offsetHeight;
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Add table body
+    const tbody = document.createElement('tbody');
 
     data.forEach((item) => {
         const row = document.createElement('tr');
-    
+
         // Create cells for each field
         const agencyTypeCell = document.createElement('td');
         agencyTypeCell.textContent = item.agency_type;
+        agencyTypeCell.style.border = '1px solid #ddd';
+        agencyTypeCell.style.padding = '8px';
         row.appendChild(agencyTypeCell);
-    
+
         const battalionCell = document.createElement('td');
         battalionCell.textContent = item.battalion;
+        battalionCell.style.border = '1px solid #ddd';
+        battalionCell.style.padding = '8px';
         row.appendChild(battalionCell);
-    
+
         const creationCell = document.createElement('td');
         const creationDate = new Date(item.creation);
-        creationCell.textContent = creationDate.toLocaleString();  // Format the date to local date/time
+        creationCell.textContent = creationDate.toLocaleString();
+        creationCell.style.border = '1px solid #ddd';
+        creationCell.style.padding = '8px';
         row.appendChild(creationCell);
-    
+
         const premiseCell = document.createElement('td');
         premiseCell.textContent = item.premise;
+        premiseCell.style.border = '1px solid #ddd';
+        premiseCell.style.padding = '8px';
         row.appendChild(premiseCell);
-    
+
         const descriptionCell = document.createElement('td');
         descriptionCell.textContent = item.type_description;
+        descriptionCell.style.border = '1px solid #ddd';
+        descriptionCell.style.padding = '8px';
         row.appendChild(descriptionCell);
-    
-        // Append the row to the current table
-        table.appendChild(row);
-    
-        // Update the current page height after adding this row
-        currentPageHeight += row.offsetHeight;
-    
-        // If the content exceeds the maximum page height, create a new page
-        if (currentPageHeight > maxPageHeight) {
-            appendTableToPage(table);
-            table = createNewTableWithHeader(headers);  // Create a new table for the next page
-            currentPageHeight = table.offsetHeight;  // Reset height for the new page
-        }
+
+        // Append the row to the tbody
+        tbody.appendChild(row);
     });
 
-    // Append the last table if not yet appended
-    if (table.rows.length > 1) {
-        appendTableToPage(table);
-    }
-}
+    // Append tbody to the table
+    table.appendChild(tbody);
 
-// Helper function to append a table to the form content area
-function appendTableToPage(table) {
-    const formContentArea = document.getElementById('formContentArea');
-    formContentArea.appendChild(table);  // Append the table to the current page
-}
+    // Add the table to the table container
+    tableContainer.appendChild(table);
 
-// Helper function to create a new table with headers
-function createNewTableWithHeader(headers) {
-    const newTable = document.createElement('table');
-    newTable.style.width = '100%';
-    newTable.style.borderCollapse = 'collapse';
-    newTable.style.marginTop = '10px';
-
-    const headerRow = document.createElement('tr');
-    headers.forEach(headerText => {
-        const headerCell = document.createElement('th');
-        headerCell.textContent = headerText;
-        headerCell.style.border = '1px solid #ddd';
-        headerCell.style.padding = '8px';
-        headerCell.style.backgroundColor = '#f2f2f2';
-        headerRow.appendChild(headerCell);
-    });
-
-    newTable.appendChild(headerRow);
-    return newTable;
+    // Return the table container to be appended to the form
+    return [tableContainer];
 }

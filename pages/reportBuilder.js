@@ -149,11 +149,14 @@ async function fetchReportData(reportType, reportData) {
     }
 
     const reportData = await response.json();
+    const reportTypeSelector = document.getElementById('reportTypeSelector');
+    const selectedText = reportTypeSelector.options[reportTypeSelector.selectedIndex].text;
     
     // Update the global state with the fetched data
     globalState.setState({
       reportData,
       selectedReportType: document.getElementById('reportTypeSelector').value, // Set the selected report type
+      reportTitle: selectedText,
     });
 
     console.log('Fetched report data:', reportData);
