@@ -7,6 +7,9 @@
     <title>Emerge-N-See Control Suite Portal</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/png" href="/img/ensportalico.png">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <script src="./highChart/code/highcharts.js"></script>
     <script src="./highChart/code/modules/series-label.js"></script>
@@ -49,6 +52,8 @@
             <p>Login to get your available menu options.</p>
         </div>
     </main>
+    <!-- Hidden print container -->
+    
 
     <footer>
         <p>Footer content, like contact info or copyright notices.</p>
@@ -58,4 +63,5 @@
     <script src="login.js"></script>
     <script src="script.js"></script>
 </body>
+<div id="printArea"></div>
 </html>

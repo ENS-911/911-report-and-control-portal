@@ -508,14 +508,6 @@ h1, h2 {
     }
 }
 
-/* Print styles */
-@media print {
-    @page {
-        size: auto; /* Use the current page size */
-        margin: 20mm; /* Adjust margins as needed */
-    }
-}
-
 /* Prevent page breaks inside elements */
 h1, h2, p, table, tr, td, th {
     page-break-inside: avoid;
@@ -547,7 +539,7 @@ body {
     width: 100%;
     max-width: 100%;
     margin: 0 auto;
-    padding: 2vw; /* Use viewport width units */
+    padding: 0; /* Use viewport width units */
     box-sizing: border-box;
     background-color: #fff;
     overflow: visible;
@@ -634,125 +626,82 @@ body {
     page-break-inside: avoid;
 }
 
+/* Screen styles */
+#printArea {
+    display: none;
+}
+
 @media print {
-    * {
-        box-sizing: border-box;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-    }
-
+    /* Hide all elements */
     body * {
-        visibility: hidden;
+        display: none !important;
     }
 
     @page {
+        width: 100vw;
         margin: 0;
-        padding: 0;
     }
 
-    #contentBody, #contentBody * {
-        visibility: visible;
-    }
-
-    /* Position the report content */
-    #contentBody {
-        position: absolute;
+    #printArea, table {
+        width: 100%;
+        position: relative;
         top: 0;
         left: 0;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-
-    @page {
-        size: auto;
-        margin: 0;
-        padding: 0;
-    }
-
-    .page, .page * {
-        visibility: visible;
-    }
-
-    .page::before {
-        padding-top: 0;
     }
 
     .page {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        transform: none !important;
-        zoom: 1;
-        display: flex;
-        flex-direction: column;
+        height: fit-content !important;
     }
 
-    .page-footer {
-        position: relative;
-        width: 100%;
-        margin: 0;
-    }
-
-    .page-footer {
-        width: 100%;
-    }
-
-    .page, .page-content, .page-footer {
-        page-break-inside: avoid;
-    }
-
-    /* Adjust content padding */
     .page-content {
-        padding: 5mm;
-    }
-
-    /* Ensure table fits within page */
-    .report-table {
-        width: 100%;
-        max-width: 100%;
-        table-layout: fixed;
-    }
-
-    .report-table th, .report-table td, .report-table tr {
+        margin: 0;
         padding: 0;
-        font-size: 9pt;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        white-space: normal;
     }
 
-    /* Footer positioning */
-    .page-footer {
-        position: relative;
-        width: 100%;
-    }
-
-    /* Hide controls */
-    #reportControls {
-        display: none !important;
+    .page-content h1 {
+        line-height: 1;
     }
 
     tbody tr:nth-child(odd) {
         background-color: lightgrey;
     }
+    
+    tbody tr:nth-child(even) {
+        background-color: #f9f9f9; /* Very light grey */
+    }
 
-    .report-table th, .report-table td {
-        border: 1px solid #ddd;
-        padding: 2px;
-        text-align: left;
+    /* Show the print area */
+    #printArea, #printArea * {
+        display: block !important;
+    }
+
+    /* Preserve display properties for table elements */
+    #printArea table {
+        display: table !important;
+        border-radius: 15px;
+    }
+
+    #printArea thead {
+        display: table-header-group !important;
+    }
+
+    #printArea tbody {
+        display: table-row-group !important;
+    }
+
+    #printArea tr {
+        display: table-row !important;
+    }
+
+    #printArea th, #printArea td {
+        display: table-cell !important;
+        padding: 0 2px;
+        font-size: 10px;
     }
 }
 
-
 .page-header, .page-footer {
-    flex-shrink: 0; /* Prevents shrinking */
+    /*flex-shrink: 0;  Prevents shrinking */
     width: 100%;
 }
 

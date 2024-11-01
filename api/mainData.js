@@ -23,7 +23,7 @@ function startFetching() {
   fetchMainData()
 
   // Set up a timer to fetch data every 60 seconds
-  setInterval(fetchMainData, 60000)
+  //setInterval(fetchMainData, 60000)
 }
 
 startFetching()

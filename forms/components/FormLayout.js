@@ -2,7 +2,6 @@ export function generateReport(title, data) {
     const contentBody = document.getElementById('contentBody');
     contentBody.innerHTML = ''; // Clear previous content
 
-    loadHtml2PdfLibrary();
     showLoadingScreen();
 
     // Wait for the loading screen to render
@@ -39,6 +38,7 @@ export function generateReport(title, data) {
         generatePages(title, pagesData);
 
         addReportControls();
+        updatePrintArea();
     }, 0);
 }
 
@@ -327,7 +327,7 @@ function addReportControls() {
 
     // Add event listeners for the buttons
     printButton.addEventListener('click', () => {
-        window.print();
+        createPdfAndPrint();
     });
 
     downloadButton.addEventListener('click', () => {
@@ -335,24 +335,91 @@ function addReportControls() {
     });
 }
 
-function loadHtml2PdfLibrary(callback) {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    script.onload = callback;
-    document.head.appendChild(script);
+async function createPdfAndPrint() {
+    const pages = document.querySelectorAll('.page');
+
+    if (pages.length === 0) {
+        console.error('No pages found to generate PDF.');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'letter');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    // Loop over each .page element
+    for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+
+        // Check if the page has content
+        if (!page.innerHTML.trim()) {
+            console.warn(`Skipping empty page at index ${i}`);
+            continue;
+        }
+
+        // Make sure the page is visible
+        page.style.display = 'block';
+
+        // Capture the page content using html2canvas
+        const canvas = await html2canvas(page, {
+            scale: 2,
+            useCORS: true,
+            scrollY: -window.scrollY,
+            windowWidth: page.scrollWidth,
+            windowHeight: page.scrollHeight,
+        });
+
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+
+        if (imgWidth === 0 || imgHeight === 0) {
+            console.error(`Canvas has zero dimensions for page ${i + 1}. Skipping this page.`);
+            continue;
+        }
+
+        // Calculate the image size for the PDF page
+        const scaleFactor = pdfWidth / imgWidth;
+        const targetHeight = imgHeight * scaleFactor;
+
+        // Check if scaling is correct
+        if (isNaN(targetHeight) || targetHeight <= 0) {
+            console.error(`Invalid target height for page ${i + 1}. Skipping this page.`);
+            continue;
+        }
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+
+        // Add a new page for each image, skipping the first new page
+        if (i > 0) {
+            pdf.addPage();
+        }
+
+        // Add the image to the PDF and fit it to the page
+        try {
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, targetHeight > pdfHeight ? pdfHeight : targetHeight);
+        } catch (error) {
+            console.error(`Error adding image to PDF on page ${i + 1}:`, error);
+            continue;
+        }
+    }
+
+    // Output the PDF as a Blob URL and call print function
+    const pdfBlobUrl = pdf.output('bloburl');
+    printPdf(pdfBlobUrl);
 }
 
-function generatePdf() {
-    // Load the library if it's not already loaded
-    if (typeof html2pdf === 'undefined') {
-        loadHtml2PdfLibrary(() => {
-            // Wait for content to render before generating PDF
-            setTimeout(createPdf, 500);
-        });
-    } else {
-        // Wait for content to render before generating PDF
-        setTimeout(createPdf, 500);
-    }
+function printPdf(pdfBlobUrl) {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = pdfBlobUrl;
+
+    iframe.onload = function () {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    };
+
+    document.body.appendChild(iframe);
 }
 
 // Helper function to format date/time for filenames
@@ -422,6 +489,22 @@ function createPdf() {
         // Reset styles
         contentBody.style.width = '';
         contentBody.style.minHeight = '';
+    });
+}
+
+function updatePrintArea() {
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = ''; // Clear previous content
+
+    // Select all .page elements
+    const pages = document.querySelectorAll('.page');
+    console.log('Number of pages found:', pages.length);
+
+    pages.forEach((page, index) => {
+        // Clone each page
+        const pageClone = page.cloneNode(true);
+        printArea.appendChild(pageClone);
+        console.log('Cloned page:', index + 1);
     });
 }
 
