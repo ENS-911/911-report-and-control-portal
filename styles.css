@@ -276,43 +276,6 @@ header {
     font-size: 1.6rem !important;
 }
 
-table {
-    width: 85%;
-    border-collapse: collapse;
-    border-radius: 15px;
-    overflow: hidden; /* Ensures the border-radius applies to the table */
-    margin-top: 50px;
-}
-
-thead {
-    background-color: darkgrey;
-}
-
-thead th {
-    color: white;
-    font-size: 2.2rem;
-    font-weight: bold;
-    text-align: center;
-    padding-top: 20px;
-    padding-bottom: 20px;
-}
-
-tbody tr:nth-child(odd) {
-    background-color: lightgrey;
-}
-
-tbody tr:nth-child(even) {
-    background-color: #f9f9f9; /* Very light grey */
-}
-
-td {
-    font-size: 1.6rem;
-    padding-top: 7px;
-    padding-bottom: 7px;
-    text-align: left; /* Aligns text to the left in table cells */
-    padding-left: 15px;
-}
-
 #menuContent form {
     display: flex;
     flex-direction: column;
@@ -428,11 +391,12 @@ td {
   }
 
   .page {
+    display: flex;
+    flex-direction: column-reverse;
     width: 90%;
     max-width: 90%; /* Ensure it doesn't exceed the container width */
-    aspect-ratio: 210 / 297; /* A4 aspect ratio */
     margin: 20px auto;
-    padding: 20px; /* Adjust as needed */
+    padding: 5px; /* Adjust as needed */
     box-sizing: border-box;
     position: relative;
     background-color: #fff;
@@ -440,6 +404,7 @@ td {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border: 1px solid #ccc;
     overflow: visible;
+    aspect-ratio: 8.5/11;
 }
 
 .page:last-child {
@@ -497,17 +462,6 @@ h1, h2 {
     page-break-after: avoid;
 }
 
-/* Adjust for on-screen display */
-@media screen {
-    .page {
-        width: 100%;
-        /*max-width: 210mm;*/
-        margin: 0 auto;
-        padding: 20px; /* Use pixels for on-screen padding */
-        box-sizing: border-box;
-    }
-}
-
 /* Prevent page breaks inside elements */
 h1, h2, p, table, tr, td, th {
     page-break-inside: avoid;
@@ -523,35 +477,32 @@ table {
     page-break-inside: auto;
 }
 
-/* Repeat table headers on new pages */
 thead {
+    background-color: darkgrey;
     display: table-header-group;
+}
+
+thead th {
+    color: white;
+    font-size: 2.2rem;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: lightgrey;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Very light grey */
 }
 
 /* Base styles */
 body {
     margin: 0;
     padding: 0;
-}
-
-/* Page styling */
-.page {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 0; /* Use viewport width units */
-    box-sizing: border-box;
-    background-color: #fff;
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Maintain aspect ratio using padding trick */
-.page::before {
-    content: '';
-    display: block;
-    padding-top: calc(297 / 210 * 100%); /* A4 aspect ratio */
 }
 
 /* Content wrapper to overlay on the aspect ratio box */
@@ -561,7 +512,6 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 2vw;
     box-sizing: border-box;
 }
 
@@ -592,112 +542,14 @@ body {
     font-size: 1.2em;
 }
 
-/* Page styling */
-.page {
-    width: 90%;
-    margin: 20px auto;
-    position: relative;
-    overflow: hidden;
-    page-break-after: always;
-}
-
 .page-content {
     padding: 20px;
     box-sizing: border-box;
 }
 
-/* Table styles */
-.report-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.report-table th, .report-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-.report-table thead {
-    display: table-header-group;
-}
-
-.report-table tr {
-    page-break-inside: avoid;
-}
-
 /* Screen styles */
 #printArea {
     display: none;
-}
-
-@media print {
-    /* Hide all elements */
-    body * {
-        display: none !important;
-    }
-
-    @page {
-        width: 100vw;
-        margin: 0;
-    }
-
-    #printArea, table {
-        width: 100%;
-        position: relative;
-        top: 0;
-        left: 0;
-    }
-
-    .page {
-        height: fit-content !important;
-    }
-
-    .page-content {
-        margin: 0;
-        padding: 0;
-    }
-
-    .page-content h1 {
-        line-height: 1;
-    }
-
-    tbody tr:nth-child(odd) {
-        background-color: lightgrey;
-    }
-    
-    tbody tr:nth-child(even) {
-        background-color: #f9f9f9; /* Very light grey */
-    }
-
-    /* Show the print area */
-    #printArea, #printArea * {
-        display: block !important;
-    }
-
-    /* Preserve display properties for table elements */
-    #printArea table {
-        display: table !important;
-        border-radius: 15px;
-    }
-
-    #printArea thead {
-        display: table-header-group !important;
-    }
-
-    #printArea tbody {
-        display: table-row-group !important;
-    }
-
-    #printArea tr {
-        display: table-row !important;
-    }
-
-    #printArea th, #printArea td {
-        display: table-cell !important;
-        padding: 0 2px;
-        font-size: 10px;
-    }
 }
 
 .page-header, .page-footer {
@@ -718,17 +570,19 @@ body {
 }
 
 .page-content {
-    flex-grow: 1; /* Allows content to grow and take up available space */
-    padding: 20px;
+    /*flex-grow: 1;  Allows content to grow and take up available space */
+    padding: 5px;
     box-sizing: border-box;
 }
 
 .page-footer {
-    padding: 10px 20px;
+    padding: 10px 5px;
     box-sizing: border-box;
     text-align: center;
     border-top: 1px solid #ddd;
     background-color: #f9f9f9;
+    position: relative;
+    bottom: 0;
 }
 
 .foot {

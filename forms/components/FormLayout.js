@@ -19,8 +19,8 @@ export function generateReport(title, data) {
         const totalPageHeight = getPageHeight();
 
         // Calculate the available content height for pages
-        const availableContentHeightPage1 = totalPageHeight - footerHeight - titleHeight - 40; // Adjust for padding/margins
-        const availableContentHeightOtherPages = totalPageHeight - footerHeight - 40; // For pages without title
+        const availableContentHeightPage1 = totalPageHeight - footerHeight - titleHeight; // Adjust for padding/margins
+        const availableContentHeightOtherPages = totalPageHeight - footerHeight - 10; // For pages without title
 
         // Split data into pages
         const pagesData = splitDataIntoPages(
@@ -359,7 +359,7 @@ async function createPdfAndPrint() {
         }
 
         // Make sure the page is visible
-        page.style.display = 'block';
+        page.style.display = 'flex';
 
         // Capture the page content using html2canvas
         const canvas = await html2canvas(page, {
