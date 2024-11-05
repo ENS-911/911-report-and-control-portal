@@ -64,7 +64,7 @@ export function generatePages(title, pagesData) {
             pageContent.appendChild(headerTitle);
         }
 
-        const tableComponent = createTableComponent(pageData);
+        const tableComponent = createTableComponent();
         pageContent.appendChild(tableComponent);
         contentBody.appendChild(pageContainer);
     });

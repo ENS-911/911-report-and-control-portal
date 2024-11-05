@@ -1,18 +1,45 @@
 import { globalState } from '../reactive/state.js';
-import { generateReport } from './components/FormLayout.js'; // Import from FormLayout.js
-// Remove the import of FormLayout and TableComponent if not used elsewhere
+import { generatePages } from './components/pageBuilder.js';
 
-const state = globalState.getState();
+export function renderForm() {
+    const menuContent = document.getElementById('menuContent');
+    const reportTitle = globalState.getState().reportTitle || 'Agency Report';
 
-// Use the new generateReport function
-export function renderForm(data, title) {
-    console.log("Render form called with title:", title, "and data length:", data.length);
+    // Generate agency type dropdown based on unique values in mainData
+    const mainData = globalState.getState().mainData || [];
+    const agencyTypes = [...new Set(mainData.map(item => item.agency_type))];
 
-    // Resolve title from global state
-    const resolvedTitle = state.reportTitle || title;
+    let agencyTypeSelector = document.getElementById('agencyTypeSelector');
+    if (!agencyTypeSelector) {
+        const dropdownContainer = document.createElement('div');
+        dropdownContainer.innerHTML = `
+          <label for="agencyTypeSelector">Filter by Agency Type:</label>
+          <select id="agencyTypeSelector">
+            <option value="all">View All</option>
+            ${agencyTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+          </select>
+        `;
+        menuContent.appendChild(dropdownContainer);
+        agencyTypeSelector = document.getElementById('agencyTypeSelector');
+    }
 
-    // Call the generateReport function
-    generateReport(resolvedTitle, data);
+    agencyTypeSelector.addEventListener('change', (e) => {
+        const selectedType = e.target.value;
+        const filteredData = selectedType === 'all'
+          ? mainData
+          : mainData.filter(item => item.agency_type === selectedType);
 
-    console.log(`Report generation initiated with title: ${resolvedTitle} and data length: ${data.length}`);
+        // Update reportData directly in globalState
+        globalState.setState({ reportData: filteredData });
+    });
+
+    // Subscribe to globalState updates to render whenever reportData changes
+    globalState.subscribe((state) => {
+        if (state.reportData) {
+            generatePages(reportTitle, state.reportData);
+        }
+    });
+
+    // Initial call to render using the current reportData in global state
+    generatePages(reportTitle, globalState.getState().reportData);
 }

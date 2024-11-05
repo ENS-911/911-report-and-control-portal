@@ -1,9 +1,12 @@
-export function createTableComponent(data) {
-    // Create table element
+import { globalState } from '../../reactive/state.js';
+
+export function createTableComponent() {
+    const data = globalState.getState().reportData || [];
+    console.log("Data received in createTableComponent:", data);
+
     const table = document.createElement('table');
     table.classList.add('report-table');
 
-    // Add table header
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     const headers = ['Agency Type', 'Battalion', 'Creation Date', 'Premise', 'Description'];
@@ -17,13 +20,11 @@ export function createTableComponent(data) {
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // Add table body
     const tbody = document.createElement('tbody');
 
     data.forEach((item) => {
         const row = document.createElement('tr');
 
-        // Create cells for each field
         const agencyTypeCell = document.createElement('td');
         agencyTypeCell.textContent = item.agency_type;
         row.appendChild(agencyTypeCell);
@@ -45,13 +46,10 @@ export function createTableComponent(data) {
         descriptionCell.textContent = item.type_description;
         row.appendChild(descriptionCell);
 
-        // Append the row to the tbody
         tbody.appendChild(row);
     });
 
-    // Append tbody to the table
     table.appendChild(tbody);
 
-    // Return the table element
     return table;
 }

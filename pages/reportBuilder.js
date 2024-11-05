@@ -98,11 +98,10 @@ function handleDateRangeChange() {
   }
 }
 
-async function fetchReportData(reportType, reportData) {
+async function fetchReportData(reportType) {
   const dateRangeSelector = document.getElementById('dateRangeSelector').value;
-  let reportFilters = {};  // Collect filters
+  let reportFilters = {};
 
-  // If the custom range is selected, pass startDate and endDate
   if (dateRangeSelector === 'selectHours') {
     const hoursInput = document.getElementById('hoursInput').value;
     reportFilters.hours = hoursInput;
@@ -115,29 +114,20 @@ async function fetchReportData(reportType, reportData) {
       return;
     }
 
-    // Only pass startDate and endDate when "selectDateRange" is chosen
     reportFilters.startDate = startDate;
     reportFilters.endDate = endDate;
   } else {
-    // For predefined ranges, only pass dateRange
-    reportFilters.dateRange = dateRangeSelector;  // Predefined date range
+    reportFilters.dateRange = dateRangeSelector;
   }
 
-  // Log reportFilters for debugging
-  console.log('Report filters:', reportFilters);
-
-  // Fetch the client key from state
   const state = globalState.getState();
   const clientKey = state.clientData?.key;
-
-  //loadForm(reportType, reportData);
 
   if (!clientKey) {
     console.error('Client key not found in state');
     return;
   }
 
-  // Fetch the data from the server based on the filters and client key
   try {
     const queryParams = new URLSearchParams(reportFilters).toString();
     const response = await fetch(`https://matrix.911-ens-services.com/report/${clientKey}?${queryParams}`);
@@ -152,34 +142,27 @@ async function fetchReportData(reportType, reportData) {
     const reportTypeSelector = document.getElementById('reportTypeSelector');
     const selectedText = reportTypeSelector.options[reportTypeSelector.selectedIndex].text;
     
-    // Update the global state with the fetched data
     globalState.setState({
-      reportData,
-      selectedReportType: document.getElementById('reportTypeSelector').value, // Set the selected report type
+      reportData, // Store reportData in global state
+      selectedReportType: document.getElementById('reportTypeSelector').value,
       reportTitle: selectedText,
     });
 
     console.log('Fetched report data:', reportData);
-    
-    // Load the form with the fetched report data
-    //loadForm(globalState.getState().selectedReportType, reportData);
 
   } catch (error) {
     console.error('Error fetching report data:', error);
   }
 }
 
-async function loadForm(reportType, data) {
+async function loadForm(reportType) {
   try {
-    // Log the report type and data to ensure they're correct
-    console.log(`Loading form for ${reportType} with data:`, data);
+    const reportData = globalState.getState().reportData; // Access reportData directly from globalState
+    console.log(`Loading form for ${reportType} with data:`, reportData);
 
-    // Dynamically import the form module based on the report type
     const formModule = await import(`../forms/${reportType}Form.js`);
 
-    // Call the form rendering function, passing the data
-    formModule.renderForm(data);
-
+    formModule.renderForm(reportData); // Use reportData directly
   } catch (error) {
     console.error(`Error loading form for ${reportType}:`, error);
   }
