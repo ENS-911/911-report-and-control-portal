@@ -1,14 +1,12 @@
-import { globalState } from '../reactive/state.js';  // Import state management
+import { globalState } from '../reactive/state.js';
 
 export function loadPage() {
   const menuContent = document.getElementById('menuContent');
   const contentBody = document.getElementById('contentBody');
 
-  // Clear previous content
   menuContent.innerHTML = '';
   contentBody.innerHTML = '';
 
-  // Set up the sidebar with report type selection
   menuContent.innerHTML = `
     <label for="reportTypeSelector">Select Report Type</label>
     <select id="reportTypeSelector">
@@ -27,27 +25,30 @@ export function loadPage() {
     <div id="reportDateRangeSelector" style="display: none;"></div>
   `;
 
-  // Initialize the report type selector event
   document.getElementById('reportTypeSelector').addEventListener('change', (e) => {
     const reportType = e.target.value;
-    globalState.setState({ selectedReportType: reportType });  // Set report type in global state
-    selectReportType(reportType); // Pass the report type value
+    globalState.setState({ selectedReportType: reportType });
+    selectReportType(reportType);
   });
 
-  globalState.subscribe(state => {
+  // Use a debounced version of the state change handler to prevent excessive calls
+  const debouncedLoadForm = debounce(() => {
+    const state = globalState.getState();
     if (state.reportData && state.selectedReportType) {
-      loadForm(state.selectedReportType, state.reportData);
+      console.log("State updated, calling loadForm once with selectedReportType:", state.selectedReportType);
+      loadForm(state.selectedReportType);
     }
-  });
+  }, 300);
+
+  globalState.subscribe(debouncedLoadForm);
 }
 
 function selectReportType(reportType) {
   console.log(`Selected report type: ${reportType}`);
 
   const reportDateRangeSelector = document.getElementById('reportDateRangeSelector');
-  reportDateRangeSelector.style.display = 'flex';  // Show the date range selector
+  reportDateRangeSelector.style.display = 'flex';
 
-  // Update date range selector options
   reportDateRangeSelector.innerHTML = `
     <label for="dateRangeSelector">Select Report Date Range</label>
     <select id="dateRangeSelector">
@@ -78,7 +79,6 @@ function handleDateRangeChange() {
   const selectedRange = dateRangeSelector.value;
   const customDateInput = document.getElementById('customDateInput');
 
-  // Show additional inputs based on the selected date range
   if (selectedRange === 'selectHours') {
     customDateInput.innerHTML = `
       <label for="hoursInput">Enter number of hours:</label>
@@ -94,7 +94,7 @@ function handleDateRangeChange() {
     `;
     customDateInput.style.display = 'flex';
   } else {
-    customDateInput.style.display = 'none';  // Hide custom input fields for other options
+    customDateInput.style.display = 'none';
   }
 }
 
@@ -143,7 +143,7 @@ async function fetchReportData(reportType) {
     const selectedText = reportTypeSelector.options[reportTypeSelector.selectedIndex].text;
     
     globalState.setState({
-      reportData, // Store reportData in global state
+      reportData,
       selectedReportType: document.getElementById('reportTypeSelector').value,
       reportTitle: selectedText,
     });
@@ -157,13 +157,20 @@ async function fetchReportData(reportType) {
 
 async function loadForm(reportType) {
   try {
-    const reportData = globalState.getState().reportData; // Access reportData directly from globalState
+    const reportData = globalState.getState().reportData;
     console.log(`Loading form for ${reportType} with data:`, reportData);
 
     const formModule = await import(`../forms/${reportType}Form.js`);
-
-    formModule.renderForm(reportData); // Use reportData directly
+    formModule.renderForm(reportData);
   } catch (error) {
     console.error(`Error loading form for ${reportType}:`, error);
   }
+}
+
+function debounce(func, delay) {
+  let timer;
+  return function(...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => func.apply(this, args), delay);
+  };
 }

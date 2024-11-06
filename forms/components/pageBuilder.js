@@ -1,75 +1,65 @@
-// components/pageBuilder.js
+import { globalState } from '../../reactive/state.js';
 import { createTableComponent } from './tableComponent.js';
+import { measureRowAndHeaderHeights, measureFooterHeight, measureTitleHeight, getPageHeight } from '../formUtils/measurementUtils.js';
 
-function getUserInfo() {
-    // Access clientData directly from globalState
-    const user = JSON.parse(localStorage.getItem('user')) || {};
+// Retrieves information on rows per page, header height, etc.
+function getPageFitInformation(title) {
+    const { rowHeight, headerHeight } = measureRowAndHeaderHeights();
+    const footerHeight = measureFooterHeight();
+    const titleHeight = measureTitleHeight(title);
 
-    console.log('this is client data: ', user)
-    
-    // Set default values if clientData is missing
-    const fname = user.fname || 'First Name';
-    const lname = user.lname || 'Last Name';
-    
-    return { fname, lname };
+    const availableContentHeight = getPageHeight() - headerHeight - footerHeight - titleHeight;
+    const rowsPerPage = Math.floor(availableContentHeight / rowHeight);
+
+    console.log("Calculated Page Fit Information:");
+    console.log("Row Height:", rowHeight);
+    console.log("Header Height:", headerHeight);
+    console.log("Footer Height:", footerHeight);
+    console.log("Title Height:", titleHeight);
+    console.log("Available Content Height:", availableContentHeight);
+    console.log("Rows per Page:", rowsPerPage);
+
+    return { rowsPerPage, availableContentHeight };
 }
 
-export function splitDataIntoPages(data, availableContentHeightPage1, availableContentHeightOtherPages, rowHeight, headerHeight) {
+// Splits data into pages based on calculated rows per page
+function splitDataIntoPages(data, rowsPerPage) {
     const pages = [];
-    let currentPageData = [];
-    let currentPageHeight = headerHeight;
-    let pageNumber = 1;
-
-    data.forEach((item) => {
-        // Calculate the height if this row were added
-        const newPageHeight = currentPageHeight + rowHeight;
-
-        // Determine the max content height for the current page
-        const maxContentHeight = pageNumber === 1 ? availableContentHeightPage1 : availableContentHeightOtherPages;
-
-        // Only add the row if it fits entirely on the current page
-        if (newPageHeight <= maxContentHeight) {
-            currentPageData.push(item);
-            currentPageHeight = newPageHeight;
-        } else {
-            // Push current data and reset for a new page
-            pages.push(currentPageData);
-            currentPageData = [item];
-            currentPageHeight = headerHeight + rowHeight; // Reset height for the new page
-            pageNumber++;
-        }
-    });
-
-    // Add any remaining data to the last page
-    if (currentPageData.length > 0) {
-        pages.push(currentPageData);
+    for (let i = 0; i < data.length; i += rowsPerPage) {
+        pages.push(data.slice(i, i + rowsPerPage));
     }
-
+    console.log("Data split into pages:", pages);
     return pages;
 }
 
+// Measures content item heights and logs for debugging
+function measureContentHeights(title, contentItems) {
+    const { rowHeight, headerHeight } = measureRowAndHeaderHeights();
+    const footerHeight = measureFooterHeight();
+    const titleHeight = measureTitleHeight(title);
+    const availableContentHeight = getPageHeight() - headerHeight - footerHeight - titleHeight;
 
-export function generatePages(title, pagesData) {
-    const contentBody = document.getElementById('contentBody');
-    contentBody.innerHTML = '';
-
-    const totalPages = pagesData.length;
-    pagesData.forEach((pageData, index) => {
-        const pageNumber = index + 1;
-        const { pageContainer, pageContent } = createPageContainer(pageNumber, totalPages);
-
-        if (pageNumber === 1) {
-            const headerTitle = document.createElement('h1');
-            headerTitle.textContent = title;
-            pageContent.appendChild(headerTitle);
+    const contentHeights = contentItems.map((item) => {
+        let height;
+        if (item.type === 'table') {
+            height = rowHeight * item.data.length + headerHeight;
+        } else if (item.type === 'chart') {
+            height = item.chartHeight || 200;
+        } else if (item.type === 'graph') {
+            height = item.graphHeight || 150;
+        } else {
+            height = 100;
         }
 
-        const tableComponent = createTableComponent();
-        pageContent.appendChild(tableComponent);
-        contentBody.appendChild(pageContainer);
+        console.log(`Content Item: ${item.type}`, "Height:", height);
+        return { ...item, height };
     });
+
+    console.log("Total available content height:", availableContentHeight);
+    return { contentHeights, availableContentHeight };
 }
 
+// Creates a container for each page with header and footer
 export function createPageContainer(pageNumber, totalPages) {
     const pageContainer = document.createElement('div');
     pageContainer.className = 'page';
@@ -80,7 +70,6 @@ export function createPageContainer(pageNumber, totalPages) {
     const footer = document.createElement('div');
     footer.className = 'page-footer';
 
-    // Define generatedDate and user info inside the function
     const generatedDate = new Date().toLocaleString();
     const { fname, lname } = getUserInfo();
 
@@ -101,4 +90,146 @@ export function createPageContainer(pageNumber, totalPages) {
     pageContainer.appendChild(footer);
 
     return { pageContainer, pageContent };
+}
+
+// Retrieves user info for report generation
+export function generatePages(title) {
+    const contentBody = document.getElementById('contentBody');
+    contentBody.innerHTML = '';
+
+    const reportData = globalState.getState().reportData || [];
+    const pagesData = splitDataIntoPages(reportData, getPageFitInformation(title).rowsPerPage);
+
+    const contentItems = [
+        { type: 'title', titleText: title },
+        ...pagesData.map(page => ({ type: 'table', data: page })),
+        { type: 'chart', chartHeight: 250 },
+        { type: 'graph', graphHeight: 200 },
+    ];
+
+    // Call measureContentHeights to get content measurements
+    const { contentHeights, availableContentHeight } = measureContentHeights(title, contentItems);
+
+    if (typeof availableContentHeight === 'undefined') {
+        console.error("Error: availableContentHeight is undefined. Check measureContentHeights function.");
+        return;
+    }
+
+    // Pass availableContentHeight to splitContentAcrossPages
+    const finalPagesData = splitContentAcrossPages(contentItems, availableContentHeight);
+
+    console.log("Final structured pages data:", finalPagesData);
+
+    finalPagesData.forEach((pageContent, pageIndex) => {
+        const pageNumber = pageIndex + 1;
+        const { pageContainer, pageContent: pageInnerContent } = createPageContainer(pageNumber, finalPagesData.length);
+
+        pageContent.forEach((item) => {
+            if (item.type === 'title' && pageNumber === 1) {
+                const headerTitle = document.createElement('h1');
+                headerTitle.textContent = item.titleText;
+                pageInnerContent.appendChild(headerTitle);
+            } else if (item.type === 'table') {
+                const tableComponent = createTableComponent(item.data);
+                pageInnerContent.appendChild(tableComponent);
+            } else if (item.type === 'chart') {
+                const chartComponent = createChartComponent();
+                pageInnerContent.appendChild(chartComponent);
+            } else if (item.type === 'graph') {
+                const graphComponent = createGraphComponent();
+                pageInnerContent.appendChild(graphComponent);
+            }
+        });
+
+        pageContainer.appendChild(pageInnerContent);
+        contentBody.appendChild(pageContainer);
+    });
+}
+
+function splitContentAcrossPages(contentItems, availableContentHeight) {
+    const pages = [];  // Array to hold each page's content
+    let currentPage = [];  // The current page being assembled
+    let currentPageHeight = 0;  // Track the height used on the current page
+
+    contentItems.forEach((item, index) => {
+        let itemHeight;
+
+        if (item.type === 'title') {
+            itemHeight = measureTitleHeight(item.titleText);
+            if (currentPageHeight + itemHeight > availableContentHeight) {
+                // Start a new page if adding title would exceed height
+                pages.push([...currentPage]);
+                currentPage = [];
+                currentPageHeight = 0;
+            }
+            currentPage.push(item);
+            currentPageHeight += itemHeight;
+
+        } else if (item.type === 'table') {
+            const { rowHeight, headerHeight } = measureRowAndHeaderHeights();
+            itemHeight = headerHeight;
+
+            // Add table header if there’s room
+            if (currentPageHeight + itemHeight > availableContentHeight) {
+                pages.push([...currentPage]);
+                currentPage = [];
+                currentPageHeight = 0;
+            }
+            currentPage.push({ type: 'tableHeader' });  // Add header as separate item
+            currentPageHeight += itemHeight;
+
+            // Add rows, splitting across pages as needed
+            item.data.forEach((row) => {
+                if (currentPageHeight + rowHeight > availableContentHeight) {
+                    pages.push([...currentPage]);
+                    currentPage = [{ type: 'tableHeader' }];  // Start new page with header
+                    currentPageHeight = headerHeight;
+                }
+                currentPage.push({ type: 'tableRow', data: row });
+                currentPageHeight += rowHeight;
+            });
+
+        } else if (item.type === 'chart' || item.type === 'graph') {
+            itemHeight = item.chartHeight || item.graphHeight;
+
+            if (currentPageHeight + itemHeight > availableContentHeight) {
+                pages.push([...currentPage]);
+                currentPage = [];
+                currentPageHeight = 0;
+            }
+            currentPage.push(item);
+            currentPageHeight += itemHeight;
+        }
+    });
+
+    // Push the final page if it has content
+    if (currentPage.length > 0) {
+        pages.push([...currentPage]);
+    }
+
+    console.log("Final pages created with structured content:", pages);
+    return pages;
+}
+
+// Placeholder for chart components
+function createChartComponent(chartData) {
+    const chartDiv = document.createElement('div');
+    chartDiv.className = 'chart';
+    chartDiv.innerHTML = `<p>Chart Placeholder</p>`;
+    return chartDiv;
+}
+
+// Placeholder for graph components
+function createGraphComponent(graphData) {
+    const graphDiv = document.createElement('div');
+    graphDiv.className = 'graph';
+    graphDiv.innerHTML = `<p>Graph Placeholder</p>`;
+    return graphDiv;
+}
+
+function getUserInfo() {
+    const user = JSON.parse(localStorage.getItem('user')) || {};
+    const fname = user.fname || 'First Name';
+    const lname = user.lname || 'Last Name';
+    return { fname, lname };
 }
