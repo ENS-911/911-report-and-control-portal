@@ -1,45 +1,31 @@
-import { globalState } from '../reactive/state.js';
-import { generatePages } from './components/pageBuilder.js';
+// agencyReportForm.js
+import { DateRangeSelector } from '../forms/components/DateRangeSelector.js';
 
-export function renderForm() {
-    const menuContent = document.getElementById('menuContent');
-    const reportTitle = globalState.getState().reportTitle || 'Agency Report';
+export function loadDateRangeSelector() {
+    const menuContent = document.getElementById('menuContent'); // Sidebar container
 
-    // Generate agency type dropdown based on unique values in mainData
-    const mainData = globalState.getState().mainData || [];
-    const agencyTypes = [...new Set(mainData.map(item => item.agency_type))];
-
-    let agencyTypeSelector = document.getElementById('agencyTypeSelector');
-    if (!agencyTypeSelector) {
-        const dropdownContainer = document.createElement('div');
-        dropdownContainer.innerHTML = `
-          <label for="agencyTypeSelector">Filter by Agency Type:</label>
-          <select id="agencyTypeSelector">
-            <option value="all">View All</option>
-            ${agencyTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-          </select>
-        `;
-        menuContent.appendChild(dropdownContainer);
-        agencyTypeSelector = document.getElementById('agencyTypeSelector');
+    if (!menuContent) {
+        console.error('Sidebar element (menuContent) not found');
+        return;
     }
 
-    agencyTypeSelector.addEventListener('change', (e) => {
-        const selectedType = e.target.value;
-        const filteredData = selectedType === 'all'
-          ? mainData
-          : mainData.filter(item => item.agency_type === selectedType);
+    console.log('Appending DateRangeSelector to sidebar');
 
-        // Update reportData directly in globalState
-        globalState.setState({ reportData: filteredData });
-    });
+    // Define a callback for handling the date range selection
+    const onRangeSelect = (selectedRange, customData) => {
+        console.log(`Selected range: ${selectedRange}`, customData);
+        // Handle the date range selection
+    };
 
-    // Subscribe to globalState updates to render whenever reportData changes
-    globalState.subscribe((state) => {
-        if (state.reportData) {
-            generatePages(reportTitle, state.reportData);
-        }
-    });
+    // Create the DateRangeSelector component
+    const dateRangeSelector = DateRangeSelector(onRangeSelect);
+    
+    // Clear any previous date selectors
+    const existingSelector = menuContent.querySelector('#reportDateRangeSelector');
+    if (existingSelector) {
+        menuContent.removeChild(existingSelector);
+    }
 
-    // Initial call to render using the current reportData in global state
-    generatePages(reportTitle, globalState.getState().reportData);
+    // Append the DateRangeSelector and log to confirm
+    menuContent.appendChild(dateRangeSelector);
 }
