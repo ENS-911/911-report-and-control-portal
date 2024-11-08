@@ -18,7 +18,6 @@ export async function fetchReportData(reportType) {
       const endDate = document.getElementById('endDate').value;
   
       if (startDate && endDate) {
-        // Send only the date part as expected (YYYY-MM-DD format)
         reportFilters.startDate = startDate;
         reportFilters.endDate = endDate;
         reportFilters.dateRange = 'selectDateRange';
