@@ -21,6 +21,7 @@ export async function fetchReportData(reportType) {
         // Send only the date part as expected (YYYY-MM-DD format)
         reportFilters.startDate = startDate;
         reportFilters.endDate = endDate;
+        reportFilters.dateRange = 'selectDateRange';
       } else {
         alert('Please select both start and end dates.');
         return;
