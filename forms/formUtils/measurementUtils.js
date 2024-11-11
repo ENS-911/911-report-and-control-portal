@@ -68,7 +68,7 @@ export function getPageHeight() {
     return pageWidth * aspectRatio;
 }
 
-export function calculateComponentHeight(element) {
+export function measureComponentHeight(element) {
     // Append to a hidden container to measure accurately
     const hiddenContainer = document.getElementById('reportMeasurementArea');
     hiddenContainer.appendChild(element);
