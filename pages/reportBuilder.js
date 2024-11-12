@@ -48,8 +48,9 @@ function generateReport() {
         return;
     }
 
-    // Finalize pages and render them
-    const pages = pageController.finalizePages();
+    // Finalize pages and only render pages with content
+    const pages = pageController.finalizePages().filter(page => page.length > 0);
     console.log("Pages to render:", pages); // Log pages to inspect structure before rendering
     renderPages(pages);
 }
+

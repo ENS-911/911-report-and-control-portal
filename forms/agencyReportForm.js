@@ -37,24 +37,30 @@ async function handleFetchData() {
     }
 }
 
-function initializePageController() {
-    const reportData = globalState.getState().reportData;
-
-    // Ensure reportData is available before initializing PageController
-    if (!reportData) {
-        console.warn("reportData not available for PageController initialization.");
-        return;
-    }
-
+export function initializePageController() {
     const pageController = new PageController();
+    const clientComponentOrder = globalState.getState().clientComponentOrder || ['title']; // Load title by default if no order
 
-    // Initialize and measure the title component
-    const titleComponent = createTitleComponent(globalState.getState().reportTitle || 'Default Report Title');
-    pageController.addContentToPage(titleComponent);
+    // Define components
+    const components = {
+        title: () => {
+            const titleComponent = createTitleComponent(globalState.getState().reportTitle || 'Default Report Title');
+            pageController.addContentToPage(titleComponent, true); // `true` for title placement
+        },
+        // Additional components can be defined here
+    };
 
-    // Additional components can be added similarly, based on `reportData`
-    globalState.setState({ pageController }); // Update state with PageController for rendering
-    console.log("PageController initialized and set in global state:", pageController);
+    // Add each component based on order
+    clientComponentOrder.forEach(componentName => {
+        if (components[componentName]) {
+            console.log(`Adding component: ${componentName}`);
+            components[componentName](); // Load and add component
+        }
+    });
+
+    // Store and log the final PageController state
+    globalState.setState({ pageController });
+    console.log("Final PageController state with components added:", pageController);
 }
 
 function onDateRangeSelect(selectedRange, customData) {

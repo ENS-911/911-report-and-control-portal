@@ -1,15 +1,13 @@
 // pageController.js
 import { measureComponentHeight } from '../formUtils/measurementUtils.js';
-import { getSystemDPI } from '../formUtils/dpiUtils.js';
+import { getMaxPageHeight } from '../formUtils/dpiUtils.js';
 
 class PageController {
     constructor() {
         this.pages = [];
         this.currentPage = [];
         this.currentPageHeight = 0;
-        this.maxPageHeight = 11; // Set max height to 11 inches
-        this.dpi = getSystemDPI();
-        this.scaleRatio = this.calculateScalingRatio();
+        this.maxPageHeight = getMaxPageHeight();
     }
 
     calculateScalingRatio() {
@@ -27,29 +25,30 @@ class PageController {
         this.currentPageHeight = 0;
     }
 
-    // Add a content element, scale if needed, and check page limits
-    addContentToPage(contentElement) {
+    addContentToPage(contentElement, isTitle = false) {
         const contentHeight = measureComponentHeight(contentElement);
-    
-        console.log("Attempting to add component:", contentElement, "Height:", contentHeight);
-    
-        // Check if adding this component would exceed maxPageHeight
+        const contentItem = { element: contentElement, height: contentHeight, isTitle };
+
+        // Start new page if needed
         if (this.currentPageHeight + contentHeight > this.maxPageHeight) {
-            this.startNewPage(); // Push current page to pages and start a new one
+            this.pages.push(this.currentPage);
+            this.currentPage = [];
+            this.currentPageHeight = 0;
         }
-    
-        // Add the component to the current page and update height
-        this.currentPage.push({ element: contentElement, height: contentHeight });
+
+        // Add content to the page
+        this.currentPage.push(contentItem);
         this.currentPageHeight += contentHeight;
     }
-
+    
+    // Finalize the pages and avoid pushing an empty page
     finalizePages() {
         if (this.currentPage.length > 0) {
-            this.pages.push(this.currentPage); // Add the last page
+            this.pages.push(this.currentPage);
         }
-        console.log("Final structured pages data:", this.pages);
         return this.pages;
     }
+
 }
 
 export default PageController;

@@ -1,11 +1,12 @@
 // pageBuilder.js
-import { getSystemDPI } from '../formUtils/dpiUtils.js';
+import { getSystemDPI, getPageDimensions, calculateAndSaveScaleRatio } from '../formUtils/dpiUtils.js';
 
-export function calculateScalingRatio() {
+const scaleRatio = calculateScalingRatio();
+
+export function calculateScalingRatio(customWidth) {
     const dpi = getSystemDPI();
-    const screenWidth = document.getElementById('contentBody').offsetWidth;
-    const actualWidthInInches = screenWidth / dpi;
-    return actualWidthInInches / 8.5; // Calculate the scaling ratio based on 8.5 inches
+    const actualWidthInInches = customWidth / dpi;
+    return actualWidthInInches / 8.5; // Calculate based on 8.5 inches
 }
 
 export function scaleComponent(element, scaleRatio) {
@@ -15,23 +16,36 @@ export function scaleComponent(element, scaleRatio) {
 
 export function renderPages(pages) {
     const contentBody = document.getElementById('contentBody');
-    contentBody.innerHTML = '';
+    contentBody.innerHTML = ''; // Clear previous content
 
-    const scaleRatio = calculateScalingRatio();
+    // Ensure the container is in the DOM before measuring
+    requestAnimationFrame(() => {
+        const containerWidth = 0.9 * contentBody.offsetWidth; // Adjust for 90% width
+        const scaleRatio = calculateAndSaveScaleRatio(containerWidth);
+        const { width, height } = getPageDimensions(containerWidth);
 
-    pages.forEach((page, index) => {
-        const pageContainer = document.createElement('div');
-        pageContainer.className = 'page';
-        pageContainer.style.width = '8.5in'; // Set true size for print/PDF
-        pageContainer.style.height = '11in';
+        pages.forEach((page, pageIndex) => {
+            const pageContainer = document.createElement('div');
+            pageContainer.className = 'page';
+            pageContainer.style.width = `${width}px`;
+            pageContainer.style.height = `${height}px`;
+            pageContainer.style.position = 'relative';
 
-        page.forEach((contentItem) => {
-            scaleComponent(contentItem.element, scaleRatio); // Scale each element
-            pageContainer.appendChild(contentItem.element);
+            page.forEach((contentItem) => {
+                const isTitle = contentItem.element.classList.contains('report-title');
+            
+            if (isTitle && pageIndex === 0) { // Only add the title to the first page
+                contentItem.element.style.position = 'absolute';
+                contentItem.element.style.top = '0';
+            }
+                // Optionally, apply scaling to each component if needed
+                scaleComponent(contentItem.element, scaleRatio);
+                pageContainer.appendChild(contentItem.element);
+            });
+
+            contentBody.appendChild(pageContainer);
         });
 
-        contentBody.appendChild(pageContainer);
+        console.log("Rendered pages with adjusted width and maintained aspect ratio.");
     });
-
-    console.log("Final structured pages data:", pages);
 }
