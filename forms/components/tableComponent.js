@@ -4,9 +4,11 @@ export function createTableComponent() {
     const data = globalState.getState().reportData || [];
     console.log("Data received in createTableComponent:", data);
 
+    // Create table structure
     const table = document.createElement('table');
     table.classList.add('report-table');
 
+    // Create table header
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     const headers = ['Agency Type', 'Battalion', 'Creation Date', 'Premise', 'Description'];
@@ -20,8 +22,10 @@ export function createTableComponent() {
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
+    // Create table body
     const tbody = document.createElement('tbody');
 
+    // Loop through data to create rows
     data.forEach((item) => {
         const row = document.createElement('tr');
 
@@ -49,7 +53,9 @@ export function createTableComponent() {
         tbody.appendChild(row);
     });
 
+    // Append tbody to table
     table.appendChild(tbody);
 
+    // Return the complete table element
     return table;
 }

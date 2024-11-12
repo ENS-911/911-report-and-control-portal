@@ -4,6 +4,11 @@ import { DateRangeSelector } from '../forms/components/DateRangeSelector.js';
 import { fetchReportData } from '../api/fetchReportData.js';
 import PageController from '../forms/controllers/PageController.js';
 import { createTitleComponent } from '../forms/components/reportTitle.js';
+import { createTableComponent } from '../forms/components/tableComponent.js';
+
+globalState.setState({
+    clientComponentOrder: ['title', 'table']
+});
 
 export function loadReportComponents() {
     const menuContent = document.getElementById('menuContent');
@@ -21,6 +26,7 @@ export function loadReportComponents() {
     // Subscribe to state to initialize PageController when reportData is set
     globalState.subscribe((state) => {
         if (state.reportData && !state.pageController) {
+            console.log("Initializing PageController with reportData:", state.reportData);
             initializePageController();
         }
     });
@@ -39,7 +45,7 @@ async function handleFetchData() {
 
 export function initializePageController() {
     const pageController = new PageController();
-    const clientComponentOrder = globalState.getState().clientComponentOrder || ['title']; // Load title by default if no order
+    const clientComponentOrder = globalState.getState().clientComponentOrder || ['title', 'table'];
 
     // Define components
     const components = {
@@ -47,7 +53,10 @@ export function initializePageController() {
             const titleComponent = createTitleComponent(globalState.getState().reportTitle || 'Default Report Title');
             pageController.addContentToPage(titleComponent, true); // `true` for title placement
         },
-        // Additional components can be defined here
+        table: () => {
+            const tableComponent = createTableComponent();
+            pageController.addContentToPage(tableComponent); // Add the complete table to the page
+        },
     };
 
     // Add each component based on order
@@ -58,7 +67,6 @@ export function initializePageController() {
         }
     });
 
-    // Store and log the final PageController state
     globalState.setState({ pageController });
     console.log("Final PageController state with components added:", pageController);
 }
