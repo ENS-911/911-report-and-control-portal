@@ -391,8 +391,6 @@ header {
   }
 
   .page {
-    display: flex;
-    flex-direction: column-reverse;
     width: 90%;
     max-width: 90%;
     height: auto;
@@ -419,8 +417,8 @@ header {
     margin-top: 20px;
 }
 
-.table-container th, .table-container td {
-    padding: 8px;
+th, td {
+    padding: 4px;
     border: 1px solid #ddd;
 }
 
@@ -431,6 +429,7 @@ header {
 /* Add this to your CSS file or style tags */
 tr, td, th {
     page-break-inside: avoid;
+    font-size: 12px;
 }
 
 /* Table Styles */
@@ -452,11 +451,6 @@ tr, td, th {
 
 .report-table tbody {
     display: table-row-group;
-}
-
-.report-table th, .report-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
 }
 
 /* Ensure headings don't break onto new pages alone */
@@ -484,24 +478,20 @@ thead {
     display: table-header-group;
 }
 
-thead th {
+th {
     color: white;
-    font-size: 2.2rem;
+    font-size: 14px;
     font-weight: bold;
     text-align: center;
     padding-top: 20px;
     padding-bottom: 20px;
 }
 
-.report-table {
-    font-size: 1.2rem;
-}
-
-tbody tr:nth-child(odd) {
+tr:nth-child(odd) {
     background-color: lightgrey;
 }
 
-tbody tr:nth-child(even) {
+tr:nth-child(even) {
     background-color: #f9f9f9; /* Very light grey */
 }
 

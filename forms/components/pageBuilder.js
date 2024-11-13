@@ -1,13 +1,6 @@
 // pageBuilder.js
-import { getSystemDPI, getPageDimensions, calculateAndSaveScaleRatio } from '../formUtils/dpiUtils.js';
-
-const scaleRatio = calculateScalingRatio();
-
-export function calculateScalingRatio(customWidth) {
-    const dpi = getSystemDPI();
-    const actualWidthInInches = customWidth / dpi;
-    return actualWidthInInches / 8.5; // Calculate based on 8.5 inches
-}
+import { globalState } from '../../reactive/state.js';
+import { getPageDimensions, calculateAndSaveScaleRatio } from '../formUtils/dpiUtils.js';
 
 export function scaleComponent(element, scaleRatio) {
     element.style.transform = `scale(${scaleRatio})`;
@@ -22,6 +15,7 @@ export function renderPages(pages) {
     requestAnimationFrame(() => {
         const containerWidth = 0.9 * contentBody.offsetWidth; // Adjust for 90% width
         const scaleRatio = calculateAndSaveScaleRatio(containerWidth);
+        globalState.setState({ scaleRatio });
         const { width, height } = getPageDimensions(containerWidth);
 
         pages.forEach((page, pageIndex) => {
@@ -33,13 +27,6 @@ export function renderPages(pages) {
 
             page.forEach((contentItem) => {
                 const isTitle = contentItem.element.classList.contains('report-title');
-            
-            if (isTitle && pageIndex === 0) { // Only add the title to the first page
-                contentItem.element.style.position = 'absolute';
-                contentItem.element.style.top = '0';
-            }
-                // Optionally, apply scaling to each component if needed
-                scaleComponent(contentItem.element, scaleRatio);
                 pageContainer.appendChild(contentItem.element);
             });
 
@@ -48,4 +35,53 @@ export function renderPages(pages) {
 
         console.log("Rendered pages with adjusted width and maintained aspect ratio.");
     });
+}
+
+export function scaleTableComponent(tableComponent, scaleRatio) {
+    if (!tableComponent || !(tableComponent instanceof HTMLElement)) {
+        console.error("Invalid or missing table component for scaling");
+        return;
+    }
+    
+    console.log("Scaling table component with scaleRatio:", scaleRatio);
+
+    // Scale header font-size
+    const headerCells = tableComponent.querySelectorAll("th");
+    if (headerCells.length === 0) {
+        console.warn("No header cells found to scale.");
+    } else {
+        headerCells.forEach((headerCell, index) => {
+            const baseFontSize = parseFloat(getComputedStyle(headerCell).fontSize);
+            if (baseFontSize) {
+                headerCell.style.fontSize = `${baseFontSize * scaleRatio}px`;
+                console.log(`Scaling header cell ${index} font-size to:`, headerCell.style.fontSize);
+            }
+        });
+    }
+
+    // Scale row font-size, padding, and margin
+    const rowCells = tableComponent.querySelectorAll("td");
+    if (rowCells.length === 0) {
+        console.warn("No row cells found to scale.");
+    } else {
+        rowCells.forEach((rowCell, index) => {
+            const baseFontSize = parseFloat(getComputedStyle(rowCell).fontSize);
+            if (baseFontSize) {
+                rowCell.style.fontSize = `${baseFontSize * scaleRatio}px`;
+                console.log(`Scaling row cell ${index} font-size to:`, rowCell.style.fontSize);
+            }
+
+            const basePadding = parseFloat(getComputedStyle(rowCell).padding);
+            if (basePadding) {
+                rowCell.style.padding = `${basePadding * scaleRatio}px`;
+                console.log(`Scaling row cell ${index} padding to:`, rowCell.style.padding);
+            }
+
+            const baseMargin = parseFloat(getComputedStyle(rowCell).margin);
+            if (baseMargin) {
+                rowCell.style.margin = `${baseMargin * scaleRatio}px`;
+                console.log(`Scaling row cell ${index} margin to:`, rowCell.style.margin);
+            }
+        });
+    }
 }

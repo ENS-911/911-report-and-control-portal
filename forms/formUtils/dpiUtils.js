@@ -8,6 +8,7 @@ export function calculateAndSaveScaleRatio(customWidth) {
     
     // Save the scaleRatio in the global state
     globalState.setState({ scaleRatio });
+    console.log("Scale ratio saved to state:", scaleRatio);
     return scaleRatio;
 }
 

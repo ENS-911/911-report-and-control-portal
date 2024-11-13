@@ -1,23 +1,18 @@
 // pageController.js
 import { measureComponentHeight } from '../formUtils/measurementUtils.js';
-import { getMaxPageHeight } from '../formUtils/dpiUtils.js';
+import { globalState } from '../../reactive/state.js';
 
 class PageController {
     constructor() {
         this.pages = [];
         this.currentPage = [];
         this.currentPageHeight = 0;
-        this.maxPageHeight = getMaxPageHeight();
+        this.maxPageHeight = globalState.getState().maxPageHeight || 816; // Default or dynamically set height
     }
 
-    calculateScalingRatio() {
-        const screenWidth = document.getElementById('contentBody').offsetWidth;
-        const actualWidthInInches = screenWidth / this.dpi;
-        return actualWidthInInches / 8.5; // Scale based on true 8.5 inches
-    }
-
-    // Start a new page and push current page content to pages array
+    // Start a new page and log action
     startNewPage() {
+        console.log(`Starting a new page. Current page height: ${this.currentPageHeight}`);
         if (this.currentPage.length > 0) {
             this.pages.push(this.currentPage);
         }
@@ -25,30 +20,31 @@ class PageController {
         this.currentPageHeight = 0;
     }
 
+    // Add content to the current page and trigger a page break if needed
     addContentToPage(contentElement, isTitle = false) {
         const contentHeight = measureComponentHeight(contentElement);
-        const contentItem = { element: contentElement, height: contentHeight, isTitle };
-
-        // Start new page if needed
-        if (this.currentPageHeight + contentHeight > this.maxPageHeight) {
-            this.pages.push(this.currentPage);
-            this.currentPage = [];
-            this.currentPageHeight = 0;
+        
+        console.log(`Attempting to add ${isTitle ? 'Title' : 'Row'} to current page. Component height: ${contentHeight}, currentPageHeight: ${this.currentPageHeight}, maxPageHeight: ${this.maxPageHeight}`);
+        
+        // Check if a new page is needed
+        if (this.currentPageHeight + contentHeight > this.maxPageHeight && !isTitle) {
+            this.startNewPage();
         }
 
-        // Add content to the page
-        this.currentPage.push(contentItem);
+        // Add content to current page and update height
+        this.currentPage.push({ element: contentElement, height: contentHeight });
         this.currentPageHeight += contentHeight;
+        console.log(`Added ${isTitle ? 'Title' : 'Row'} to page. New currentPageHeight: ${this.currentPageHeight}`);
     }
-    
-    // Finalize the pages and avoid pushing an empty page
+
+    // Finalize pages for rendering
     finalizePages() {
         if (this.currentPage.length > 0) {
-            this.pages.push(this.currentPage);
+            this.pages.push(this.currentPage); // Final push for any remaining content
         }
+        console.log("Final structured pages data:", this.pages);
         return this.pages;
     }
-
 }
 
 export default PageController;
