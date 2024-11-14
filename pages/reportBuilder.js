@@ -2,10 +2,12 @@
 import { globalState } from '../reactive/state.js';
 import { ReportTypeSelector } from '../forms/components/ReportTypeSelector.js';
 import { renderPages } from '../forms/components/pageBuilder.js';
+import { calculateAndSaveScaleRatio } from '../forms/formUtils/dpiUtils.js';
 
 export function loadPage() {
     const menuContent = document.getElementById('menuContent');
     const contentBody = document.getElementById('contentBody');
+    const containerWidth = 0.9 * contentBody.offsetWidth;
 
     menuContent.innerHTML = '';
     contentBody.innerHTML = '';
@@ -16,6 +18,8 @@ export function loadPage() {
         globalState.setState({ selectedReportType: reportType });
         loadForm(reportType);
     });
+
+    calculateAndSaveScaleRatio(containerWidth);
 
     // Run generateReport only when both `reportData` and `pageController` are available
     globalState.subscribe((state) => {

@@ -4,17 +4,6 @@ import { measureComponentHeight } from '../formUtils/measurementUtils.js';
 export function createTableComponent(pageController) {
     const data = globalState.getState().reportData || [];
 
-    // Fetch scaleRatio directly from globalState when needed
-    const scaleRatio = globalState.getState().scaleRatio || 1;
-    console.log("Data received in createTableComponent:", data, "Scale ratio:", scaleRatio);
-
-    function applyScaling(element) {
-        const computedStyles = getComputedStyle(element);
-        element.style.fontSize = `${parseFloat(computedStyles.fontSize) * scaleRatio}px`;
-        element.style.padding = `${parseFloat(computedStyles.padding) * scaleRatio}px`;
-        element.style.margin = `${parseFloat(computedStyles.margin) * scaleRatio}px`;
-    }
-
     function createHeader() {
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
@@ -23,7 +12,6 @@ export function createTableComponent(pageController) {
         headers.forEach(headerText => {
             const headerCell = document.createElement('th');
             headerCell.textContent = headerText;
-            applyScaling(headerCell);
             headerRow.appendChild(headerCell);
         });
 
@@ -48,28 +36,23 @@ export function createTableComponent(pageController) {
 
         const agencyTypeCell = document.createElement('td');
         agencyTypeCell.textContent = item.agency_type;
-        applyScaling(agencyTypeCell);
         row.appendChild(agencyTypeCell);
 
         const battalionCell = document.createElement('td');
         battalionCell.textContent = item.battalion;
-        applyScaling(battalionCell);
         row.appendChild(battalionCell);
 
         const creationCell = document.createElement('td');
         const creationDate = new Date(item.creation);
         creationCell.textContent = creationDate.toLocaleString();
-        applyScaling(creationCell);
         row.appendChild(creationCell);
 
         const premiseCell = document.createElement('td');
         premiseCell.textContent = item.premise;
-        applyScaling(premiseCell);
         row.appendChild(premiseCell);
 
         const descriptionCell = document.createElement('td');
         descriptionCell.textContent = item.type_description;
-        applyScaling(descriptionCell);
         row.appendChild(descriptionCell);
 
         const rowHeight = measureComponentHeight(row);

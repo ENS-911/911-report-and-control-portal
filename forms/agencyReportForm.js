@@ -6,8 +6,6 @@ import PageController from '../forms/controllers/PageController.js';
 import { createTitleComponent } from '../forms/components/reportTitle.js';
 import { createTableComponent } from '../forms/components/tableComponent.js';
 
-import { scaleTableComponent } from '../forms/components/pageBuilder.js';
-
 globalState.setState({
     clientComponentOrder: ['title', 'table']
 });
