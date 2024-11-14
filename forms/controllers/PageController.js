@@ -1,6 +1,9 @@
 // pageController.js
 import { measureComponentHeight } from '../formUtils/measurementUtils.js';
 import { globalState } from '../../reactive/state.js';
+import { getMaxPageHeight } from '../formUtils/dpiUtils.js';
+
+getMaxPageHeight()
 
 class PageController {
     constructor() {
@@ -23,6 +26,8 @@ class PageController {
     // Add content to the current page and trigger a page break if needed
     addContentToPage(contentElement, isTitle = false) {
         const contentHeight = measureComponentHeight(contentElement);
+
+        console.log(`Adding row to page. Row height: ${contentHeight}, Current page height: ${this.currentPageHeight}, Max page height: ${this.maxPageHeight}`);
         
         console.log(`Attempting to add ${isTitle ? 'Title' : 'Row'} to current page. Component height: ${contentHeight}, currentPageHeight: ${this.currentPageHeight}, maxPageHeight: ${this.maxPageHeight}`);
         

@@ -403,8 +403,6 @@ header {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border: 1px solid #ccc;
     overflow: visible;
-    aspect-ratio: 8.5 / 11;
-    min-height: calc((100vw - 20px) * (11 / 8.5)); /* Adjust min-height based on width */
 }
 
 .page:last-child {

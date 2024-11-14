@@ -47,34 +47,60 @@ export function scaleTableComponent(table, scaleRatio) {
         console.error("Invalid or missing table component for scaling");
         return;
     }
-    
+
     console.log("Scaling table component with scaleRatio:", scaleRatio);
 
-    // Scale header font-size and padding
+    // Scale header font-size, top/bottom padding
     const headerCells = table.querySelectorAll("th");
     headerCells.forEach((headerCell, index) => {
-        const baseFontSize = parseFloat(getComputedStyle(headerCell).fontSize);
-        const basePadding = parseFloat(getComputedStyle(headerCell).padding);
+        const computedStyles = getComputedStyle(headerCell);
+        const baseFontSize = parseFloat(computedStyles.fontSize);
+        const basePaddingTop = parseFloat(computedStyles.paddingTop);
+        const basePaddingBottom = parseFloat(computedStyles.paddingBottom);
+        const baseLineHeightRatio = parseFloat(computedStyles.lineHeight) / baseFontSize;
+
         if (baseFontSize) {
             headerCell.style.fontSize = `${baseFontSize * scaleRatio}px`;
         }
-        if (basePadding) {
-            headerCell.style.padding = `${basePadding * scaleRatio}px`;
+        if (basePaddingTop) {
+            headerCell.style.paddingTop = `${basePaddingTop * scaleRatio}px`;
         }
-        console.log(`Scaling header cell ${index} font-size to: ${headerCell.style.fontSize}, padding to: ${headerCell.style.padding}`);
+        if (basePaddingBottom) {
+            headerCell.style.paddingBottom = `${basePaddingBottom * scaleRatio}px`;
+        }
+        if (baseLineHeightRatio) {
+            headerCell.style.lineHeight = `${baseFontSize * baseLineHeightRatio * scaleRatio}px`;
+        }
+
+        console.log(`Scaling header cell ${index} font-size to: ${headerCell.style.fontSize}, paddingTop to: ${headerCell.style.paddingTop}, paddingBottom to: ${headerCell.style.paddingBottom}`);
     });
 
-    // Scale row font-size and padding
+    // Scale row font-size, padding, and border width
     const rowCells = table.querySelectorAll("td");
     rowCells.forEach((rowCell, index) => {
-        const baseFontSize = parseFloat(getComputedStyle(rowCell).fontSize);
-        const basePadding = parseFloat(getComputedStyle(rowCell).padding);
+        const computedStyles = getComputedStyle(rowCell);
+        const baseFontSize = parseFloat(computedStyles.fontSize);
+        const basePaddingTop = parseFloat(computedStyles.paddingTop);
+        const basePaddingBottom = parseFloat(computedStyles.paddingBottom);
+        const baseBorderWidth = parseFloat(computedStyles.borderWidth);
+        const baseLineHeightRatio = parseFloat(computedStyles.lineHeight) / baseFontSize;
+
         if (baseFontSize) {
             rowCell.style.fontSize = `${baseFontSize * scaleRatio}px`;
         }
-        if (basePadding) {
-            rowCell.style.padding = `${basePadding * scaleRatio}px`;
+        if (basePaddingTop) {
+            rowCell.style.paddingTop = `${basePaddingTop * scaleRatio}px`;
         }
-        console.log(`Scaling row cell ${index} font-size to: ${rowCell.style.fontSize}, padding to: ${rowCell.style.padding}`);
+        if (basePaddingBottom) {
+            rowCell.style.paddingBottom = `${basePaddingBottom * scaleRatio}px`;
+        }
+        if (baseBorderWidth) {
+            rowCell.style.borderWidth = `${baseBorderWidth * scaleRatio}px`;
+        }
+        if (baseLineHeightRatio) {
+            rowCell.style.lineHeight = `${baseFontSize * baseLineHeightRatio * scaleRatio}`;
+        }
+
+        console.log(`Scaling row cell ${index} font-size to: ${rowCell.style.fontSize}, paddingTop to: ${rowCell.style.paddingTop}, paddingBottom to: ${rowCell.style.paddingBottom}, borderWidth to: ${rowCell.style.borderWidth}`);
     });
 }

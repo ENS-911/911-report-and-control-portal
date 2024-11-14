@@ -63,7 +63,7 @@ export function measureTitleHeight(title) {
 }
 
 export function getPageHeight() {
-    const pageWidth = document.getElementById('contentBody').offsetWidth;
+    const pageWidth = 0.9 * document.getElementById('contentBody').offsetWidth;
     const aspectRatio = 8.5 / 11;
     return pageWidth * aspectRatio;
 }

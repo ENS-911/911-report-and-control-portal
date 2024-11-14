@@ -14,8 +14,9 @@ export function calculateAndSaveScaleRatio(customWidth) {
 
 export function getMaxPageHeight() {
     const dpi = getSystemDPI(); // Use your existing DPI function
-    const inchesToPixels = dpi * 8.5; // Convert 11 inches to pixels based on DPI
-    return inchesToPixels;
+    const maxPageHeight = dpi * 11; 
+    globalState.setState({ maxPageHeight });
+    return maxPageHeight;
 }
 
 export function getSystemDPI() {
@@ -28,8 +29,8 @@ export function getSystemDPI() {
     return dpi;
 }
 
-export function getPageDimensions(width) {
-    const aspectRatio = 11 / 8.5; // Aspect ratio for an 8.5 x 11 page
-    const height = width * aspectRatio;
-    return { width, height };
+export function getPageDimensions(containerWidth) {
+    const aspectRatio = 11 / 8.5; // Should be exactly 1.2941
+    const height = containerWidth * aspectRatio;
+    return { width: containerWidth, height: Math.round(height) }; // Rounded for pixel alignment
 }
