@@ -57,19 +57,15 @@ export function scaleTableComponent(table, scaleRatio) {
         const baseFontSize = parseFloat(computedStyles.fontSize);
         const basePaddingTop = parseFloat(computedStyles.paddingTop);
         const basePaddingBottom = parseFloat(computedStyles.paddingBottom);
-        const baseLineHeightRatio = parseFloat(computedStyles.lineHeight) / baseFontSize;
 
         if (baseFontSize) {
-            headerCell.style.fontSize = `${baseFontSize * scaleRatio}px`;
+            headerCell.style.fontSize = `${parseFloat(baseFontSize * scaleRatio - (scaleRatio / 10)).toFixed(0)}px`;
         }
         if (basePaddingTop) {
-            headerCell.style.paddingTop = `${basePaddingTop * scaleRatio}px`;
+            headerCell.style.paddingTop = `${parseFloat(basePaddingTop * scaleRatio - (scaleRatio / 10)).toFixed(0)}px`;
         }
         if (basePaddingBottom) {
-            headerCell.style.paddingBottom = `${basePaddingBottom * scaleRatio}px`;
-        }
-        if (baseLineHeightRatio) {
-            headerCell.style.lineHeight = `${baseFontSize * baseLineHeightRatio * scaleRatio}px`;
+            headerCell.style.paddingBottom = `${parseFloat(basePaddingBottom * scaleRatio - (scaleRatio / 10)).toFixed(0)}px`;
         }
 
         console.log(`Scaling header cell ${index} font-size to: ${headerCell.style.fontSize}, paddingTop to: ${headerCell.style.paddingTop}, paddingBottom to: ${headerCell.style.paddingBottom}`);
@@ -82,23 +78,15 @@ export function scaleTableComponent(table, scaleRatio) {
         const baseFontSize = parseFloat(computedStyles.fontSize);
         const basePaddingTop = parseFloat(computedStyles.paddingTop);
         const basePaddingBottom = parseFloat(computedStyles.paddingBottom);
-        const baseBorderWidth = parseFloat(computedStyles.borderWidth);
-        const baseLineHeightRatio = parseFloat(computedStyles.lineHeight) / baseFontSize;
 
         if (baseFontSize) {
-            rowCell.style.fontSize = `${baseFontSize * scaleRatio}px`;
+            rowCell.style.fontSize = `${parseFloat(baseFontSize * scaleRatio - (scaleRatio / 10)).toFixed(0)}px`;
         }
         if (basePaddingTop) {
-            rowCell.style.paddingTop = `${basePaddingTop * scaleRatio}px`;
+            rowCell.style.paddingTop = `${parseFloat(basePaddingTop * scaleRatio - (scaleRatio / 10)).toFixed(0)}px`;
         }
         if (basePaddingBottom) {
-            rowCell.style.paddingBottom = `${basePaddingBottom * scaleRatio}px`;
-        }
-        if (baseBorderWidth) {
-            rowCell.style.borderWidth = `${baseBorderWidth * scaleRatio}px`;
-        }
-        if (baseLineHeightRatio) {
-            rowCell.style.lineHeight = `${baseFontSize * baseLineHeightRatio * scaleRatio}`;
+            rowCell.style.paddingBottom = `${parseFloat(basePaddingBottom * scaleRatio - (scaleRatio / 10)).toFixed(0)}px`;
         }
 
         console.log(`Scaling row cell ${index} font-size to: ${rowCell.style.fontSize}, paddingTop to: ${rowCell.style.paddingTop}, paddingBottom to: ${rowCell.style.paddingBottom}, borderWidth to: ${rowCell.style.borderWidth}`);

@@ -4,8 +4,8 @@ import { globalState } from '../../reactive/state.js';
 export function calculateAndSaveScaleRatio(customWidth) {
     const dpi = getSystemDPI();
     const actualWidthInInches = customWidth / dpi;
-    const scaleRatio = actualWidthInInches / 8.5; // Based on 8.5 inches width
-    
+    let scaleRatio = actualWidthInInches / 8.5; // Based on 8.5 inches width
+    scaleRatio = parseFloat(scaleRatio.toFixed(1));
     // Save the scaleRatio in the global state
     globalState.setState({ scaleRatio });
     console.log("Scale ratio saved to state:", scaleRatio);
