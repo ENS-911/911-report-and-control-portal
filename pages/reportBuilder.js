@@ -3,6 +3,7 @@ import { globalState } from '../reactive/state.js';
 import { ReportTypeSelector } from '../forms/components/ReportTypeSelector.js';
 import { renderPages } from '../forms/components/pageBuilder.js';
 import { calculateAndSaveScaleRatio } from '../forms/formUtils/dpiUtils.js';
+import { createAndMeasureFooter } from '../forms/components/createAndMeasureFooter.js';
 
 export function loadPage() {
     const menuContent = document.getElementById('menuContent');

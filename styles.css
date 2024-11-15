@@ -416,7 +416,7 @@ header {
 }
 
 th, td {
-    padding: 4px;
+    padding: 2px;
     border: 1px solid #ddd;
 }
 
@@ -481,15 +481,16 @@ th {
     font-size: 14px;
     font-weight: bold;
     text-align: center;
-    padding-top: 20px;
-    padding-bottom: 20px;
-}
-
-tr:nth-child(odd) {
-    background-color: lightgrey;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    background-color: #696969;
 }
 
 tr:nth-child(even) {
+    background-color: lightgrey;
+}
+
+tr:nth-child(odd) {
     background-color: #f9f9f9; /* Very light grey */
 }
 
@@ -570,17 +571,27 @@ body {
 }
 
 .page-footer {
-    padding: 10px 5px;
-    box-sizing: border-box;
-    text-align: center;
-    border-top: 1px solid #ddd;
-    background-color: #f9f9f9;
     position: relative;
     bottom: 0;
-}
-
-.foot {
     display: flex;
     justify-content: space-between;
-    margin: 5px 15px;
+    align-items: center;
+    padding: 5px;
+    border-top: 1px solid #bbb;
+    font-size: 12px;
+}
+
+.footer-left, .footer-center, .footer-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.footer-center {
+    align-items: center;
+    flex: 1;
+}
+
+.footer-right {
+    align-items: flex-end;
 }

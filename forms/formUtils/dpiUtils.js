@@ -5,7 +5,7 @@ export function calculateAndSaveScaleRatio(customWidth) {
     const dpi = getSystemDPI();
     const actualWidthInInches = customWidth / dpi;
     let scaleRatio = actualWidthInInches / 8.5; // Based on 8.5 inches width
-    scaleRatio = parseFloat(scaleRatio.toFixed(1));
+    scaleRatio = parseFloat(scaleRatio);
     // Save the scaleRatio in the global state
     globalState.setState({ scaleRatio });
     console.log("Scale ratio saved to state:", scaleRatio);
