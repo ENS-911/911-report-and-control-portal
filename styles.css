@@ -405,10 +405,6 @@ header {
     overflow: visible;
 }
 
-.page:last-child {
-    page-break-after: auto;
-}
-
 .table-container {
     width: 100%;
     border-collapse: collapse;
@@ -571,8 +567,9 @@ body {
 }
 
 .page-footer {
-    position: relative;
+    position: absolute;
     bottom: 0;
+    left: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;

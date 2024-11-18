@@ -1,24 +1,20 @@
-// pageController.js
+// PageController.js
 import { measureComponentHeight, measureFooterHeight } from '../formUtils/measurementUtils.js';
-import { globalState } from '../../reactive/state.js';
 import { getMaxPageHeight } from '../formUtils/dpiUtils.js';
 
-// Set max page height and footer height initially, without modifying state
 const footerHeight = measureFooterHeight();
 const baseMaxPageHeight = getMaxPageHeight();
-const adjustedMaxPageHeight = baseMaxPageHeight - footerHeight; // Calculate once, outside the class
-console.log('THIS IS WHAT IS PASSED IN AS THE FOOTER HEIGHT: ', footerHeight)
+const adjustedMaxPageHeight = baseMaxPageHeight - footerHeight;
 
 class PageController {
     constructor() {
         this.pages = [];
         this.currentPage = [];
         this.currentPageHeight = 0;
-        this.maxPageHeight = globalState.getState().maxPageHeight || 816; // Default page height
-        this.availablePageHeight = adjustedMaxPageHeight;
+        this.maxPageHeight = adjustedMaxPageHeight; // Adjusted once for content
     }
 
-    // Start a new page
+    // Start a new page and push to pages array
     startNewPage() {
         if (this.currentPage.length > 0) {
             this.pages.push(this.currentPage);
@@ -27,11 +23,11 @@ class PageController {
         this.currentPageHeight = 0;
     }
 
-    // Add content to the page
+    // Add content and manage page breaks
     addContentToPage(contentElement, isTitle = false) {
         const contentHeight = measureComponentHeight(contentElement);
 
-        // Check for page break
+        // Only trigger page break if content exceeds available height
         if (this.currentPageHeight + contentHeight > this.maxPageHeight && !isTitle) {
             this.startNewPage();
         }
@@ -41,7 +37,7 @@ class PageController {
         this.currentPageHeight += contentHeight;
     }
 
-    // Finalize pages for rendering
+    // Finalize pages
     finalizePages() {
         if (this.currentPage.length > 0) {
             this.pages.push(this.currentPage);

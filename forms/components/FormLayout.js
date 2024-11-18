@@ -1,7 +1,6 @@
 // FormLayout.js
 import { showLoadingScreen, removeLoadingScreen } from '../formUtils/loadingScreen.js';
 import { measureRowAndHeaderHeights, measureFooterHeight, measureTitleHeight, getPageHeight } from '../formUtils/measurementUtils.js';
-import { createPdfAndPrint } from '../formUtils/pdfUtils.js';
 import { splitDataIntoPages, generatePages } from '../components/pageBuilder.js';
 import { addReportControls } from '../components/reportControls.js';
 

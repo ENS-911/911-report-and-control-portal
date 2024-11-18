@@ -1,18 +1,11 @@
 // pageBuilder.js
 import { getPageDimensions } from '../formUtils/dpiUtils.js';
 import { globalState } from '../../reactive/state.js';
-import { measureFooterHeight } from '../formUtils/measurementUtils.js';
-
-export function scaleComponent(element, scaleRatio) {
-    element.style.transform = `scale(${scaleRatio})`;
-    element.style.transformOrigin = 'top left';
-}
 
 function createFooter(pageIndex, totalPages) {
     const footer = document.createElement('footer');
     footer.className = 'page-footer';
 
-    // Left Section: Date and Page Number
     const leftSection = document.createElement('div');
     leftSection.className = 'footer-left';
     const formattedDateTime = new Date().toLocaleString();
@@ -21,12 +14,10 @@ function createFooter(pageIndex, totalPages) {
         <p>Page ${pageIndex + 1} of ${totalPages}</p>
     `;
 
-    // Center Section: Report Title
     const centerSection = document.createElement('div');
     centerSection.className = 'footer-center';
     centerSection.textContent = globalState.getState().reportTitle || 'Report Title';
 
-    // Right Section: User and Tool Information
     const rightSection = document.createElement('div');
     rightSection.className = 'footer-right';
     const userInfo = JSON.parse(localStorage.getItem('user')) || {};
@@ -49,10 +40,7 @@ export function renderPages(pages) {
     requestAnimationFrame(() => {
         const containerWidth = 0.9 * contentBody.offsetWidth;
         const { width, height } = getPageDimensions(containerWidth);
-
-        const footerHeight = measureFooterHeight();
         const scaleRatio = globalState.getState().scaleRatio;
-        const availableHeight = height - footerHeight * scaleRatio;
 
         pages.forEach((page, pageIndex) => {
             const pageContainer = document.createElement('div');
@@ -61,34 +49,18 @@ export function renderPages(pages) {
             pageContainer.style.height = `${height}px`;
             pageContainer.style.position = 'relative';
 
-            let currentPageHeight = 0;
-
             page.forEach((contentItem) => {
-                const contentHeight = contentItem.element.offsetHeight * scaleRatio;
-
-                if (currentPageHeight + contentHeight <= availableHeight) {
-                    pageContainer.appendChild(contentItem.element);
-                    currentPageHeight += contentHeight;
-                } else {
-                    contentBody.appendChild(pageContainer);
-                    const newPageContainer = document.createElement('div');
-                    newPageContainer.className = 'page';
-                    newPageContainer.style.width = `${width}px`;
-                    newPageContainer.style.height = `${height}px`;
-                    newPageContainer.style.position = 'relative';
-
-                    newPageContainer.appendChild(contentItem.element);
-                    currentPageHeight = contentHeight;
-                    pageContainer = newPageContainer;
-                }
+                pageContainer.appendChild(contentItem.element);
             });
 
+            // Add footer to each page container
             const footer = createFooter(pageIndex, pages.length);
             pageContainer.appendChild(footer);
 
             contentBody.appendChild(pageContainer);
         });
 
+        // Apply scaling to tables
         const tables = document.querySelectorAll("table.report-table");
         tables.forEach((table, index) => {
             scaleTableComponent(table, scaleRatio);
@@ -107,7 +79,11 @@ export function scaleTableComponent(table, scaleRatio) {
 
     console.log("Scaling table component with scaleRatio:", scaleRatio);
 
-    // Scale header font-size, top/bottom padding
+    if (!table || !(table instanceof HTMLElement) || table.hasAttribute('data-scaled')) return; // Prevent double scaling
+
+    table.setAttribute('data-scaled', 'true');
+
+    // Scale header and row cells
     const headerCells = table.querySelectorAll("th");
     headerCells.forEach((headerCell, index) => {
         const computedStyles = getComputedStyle(headerCell);
@@ -124,11 +100,8 @@ export function scaleTableComponent(table, scaleRatio) {
         if (basePaddingBottom) {
             headerCell.style.paddingBottom = `${parseFloat(basePaddingBottom * scaleRatio - (scaleRatio / 10)).toFixed(0)}px`;
         }
-
-        console.log(`Scaling header cell ${index} font-size to: ${headerCell.style.fontSize}, paddingTop to: ${headerCell.style.paddingTop}, paddingBottom to: ${headerCell.style.paddingBottom}`);
     });
 
-    // Scale row font-size, padding, and border width
     const rowCells = table.querySelectorAll("td");
     rowCells.forEach((rowCell, index) => {
         const computedStyles = getComputedStyle(rowCell);
@@ -145,7 +118,36 @@ export function scaleTableComponent(table, scaleRatio) {
         if (basePaddingBottom) {
             rowCell.style.paddingBottom = `${parseFloat(basePaddingBottom * scaleRatio - (scaleRatio / 10)).toFixed(0)}px`;
         }
-
-        console.log(`Scaling row cell ${index} font-size to: ${rowCell.style.fontSize}, paddingTop to: ${rowCell.style.paddingTop}, paddingBottom to: ${rowCell.style.paddingBottom}, borderWidth to: ${rowCell.style.borderWidth}`);
     });
+}
+
+export function applyColumnWidths(table, columnWidths) {
+    const headerCells = table.querySelectorAll("th");
+    const rowCells = table.querySelectorAll("tr");
+
+    headerCells.forEach((headerCell, index) => {
+        if (columnWidths[index]) {
+            headerCell.style.width = `${columnWidths[index]}px`;
+        }
+    });
+
+    rowCells.forEach((row) => {
+        const cells = row.querySelectorAll("td");
+        cells.forEach((cell, index) => {
+            if (columnWidths[index]) {
+                cell.style.width = `${columnWidths[index]}px`;
+            }
+        });
+    });
+}
+
+export function captureColumnWidths(table) {
+    const columnWidths = [];
+    const headerCells = table.querySelectorAll("th");
+
+    headerCells.forEach((headerCell) => {
+        columnWidths.push(headerCell.offsetWidth);
+    });
+
+    return columnWidths;
 }
