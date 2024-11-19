@@ -3,7 +3,6 @@ import { measureComponentHeight } from '../formUtils/measurementUtils.js';
 
 export function createTableComponent(pageController) {
     const data = globalState.getState().reportData || [];
-    console.log("Data received in createTableComponent:", data);
 
     // Create the table header element
     function createHeader() {
@@ -28,8 +27,7 @@ export function createTableComponent(pageController) {
         table.appendChild(createHeader());
         const tbody = document.createElement('tbody');
         table.appendChild(tbody);
-        pageController.addContentToPage(table); // Adds the complete table to the page
-        console.log("Started new table with header.");
+        pageController.addContentToPage(table);
         return tbody;
     }
 
@@ -50,12 +48,10 @@ export function createTableComponent(pageController) {
         });
 
         const rowHeight = measureComponentHeight(row);
-        console.log(`Row ${index + 1} height: ${rowHeight}px`);
         accumulatedHeight = pageController.currentPageHeight + rowHeight;
 
         // Check if adding the row would exceed the page height
         if (accumulatedHeight > pageController.maxPageHeight) {
-            console.log(`Exceeded max page height with Row ${index + 1}. Starting new page.`);
             pageController.startNewPage();
             tbody = startNewTable(); // Start a new table on the new page
             accumulatedHeight = rowHeight; // Reset accumulated height to the new row's height
@@ -64,8 +60,5 @@ export function createTableComponent(pageController) {
         // Add row to the current page's tbody
         tbody.appendChild(row);
         pageController.currentPageHeight = accumulatedHeight;
-        console.log(`Added Row ${index + 1} to page. Current page height: ${pageController.currentPageHeight}px`);
     });
-
-    console.log("Completed table component creation with page adjustments.");
 }

@@ -589,6 +589,29 @@ body {
     flex: 1;
 }
 
+.page {
+    overflow: hidden;
+}
+
 .footer-right {
     align-items: flex-end;
+}
+
+.report-table {
+    table-layout: fixed; /* Ensures columns adjust proportionally */
+    width: 100%; /* Makes table span the full parent container */
+    border-collapse: collapse; /* Optional: for cleaner border styling */
+}
+
+.report-table tr {
+    width: 100%;
+    object-fit: contain;
+}
+
+.report-table tr th, .report-table tr td {
+    text-overflow: ellipsis; /* Show ellipsis if necessary */
+    overflow: hidden; /* Prevent content from spilling out */
+    white-space: nowrap; /* Prevent text wrapping */
+    width: auto;
+    max-width: 35%;
 }
