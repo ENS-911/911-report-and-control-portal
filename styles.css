@@ -155,8 +155,12 @@ header {
     margin-left: 50px;
     top: 30px;
     color: #FFFFFF;
-    font-size: 2.2rem;
+    font-size: 16px;
     position: absolute;
+}
+
+.page h1 {
+    font-size: 14px;
 }
 
 #hamburger-menu {
@@ -165,6 +169,10 @@ header {
     top: 27px;
     left: 82%;
   }
+
+.page span {
+    font-size: 12px;
+}
   
   #hamburger-menu .bar1, #hamburger-menu .bar2, #hamburger-menu .bar3 {
     width: 35px;
@@ -625,4 +633,40 @@ body {
 .all-agency-types-title {
     margin-top: 5px;
     font-size: 16px;
+}
+
+.single-agency-type {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.single-agency-header {
+    text-align: center;
+    width: 100%;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.total-events-label {
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.battalion-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.battalion-list li {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.battalion-list p {
+    font-weight: bold;
+    margin-top: 10px;
 }

@@ -4,6 +4,7 @@ import { fetchReportData } from '../../api/fetchReportData.js';
 import { createTitleComponent } from '../components/reportTitle.js';
 import { createTableComponent } from '../components/tableComponent.js';
 import { allAgencyTypes } from '../components/allAgencyTypes.js';
+import { singleAgencyType } from '../components/singleAgencyType.js';
 import { renderPages } from '../components/pageBuilder.js';
 import PageController from '../controllers/PageController.js';
 
@@ -26,7 +27,7 @@ export class LoadOrchestrator {
     constructor(templateName) {
         this.templateName = templateName;
         this.templateComponents = templateConfigurations[templateName] || [];
-        this.pageController = null;
+        this.pageController = new PageController();
     }
 
     async orchestrateLoad() {
@@ -148,6 +149,32 @@ export class LoadOrchestrator {
     
         // Add the selected component to the page
         this.pageController.addContentToPage(agencyTypeComponent);
+    }
+
+    refreshReport() {
+        // Ensure the necessary data exists in state
+        const reportData = globalState.getState().reportData;
+        if (!reportData || reportData.length === 0) {
+            console.warn("No data available for refresh.");
+            return;
+        }
+    
+        // Get the current dynamic component order
+        const dynamicOrder = globalState.getState().clientComponentOrder || this.templateComponents;
+    
+        // Log the operation
+        console.log("Refreshing report with current state:", { dynamicOrder, reportData });
+    
+        // Re-initialize components and re-render pages
+        this.initializeComponents(dynamicOrder);
+    
+        if (this.pageController) {
+            const pages = this.pageController.finalizePages().filter(page => page.length > 0);
+            console.log("Pages to render during refresh:", pages);
+            renderPages(pages);
+        } else {
+            console.error("PageController not initialized during refresh.");
+        }
     }
 
     checkAgencyTypes(reportData) {

@@ -1,6 +1,5 @@
 import { globalState } from '../reactive/state.js';
 import { DateRangeSelector } from '../forms/components/DateRangeSelector.js';
-import { fetchReportData } from '../api/fetchReportData.js';
 import { LoadOrchestrator } from '../forms/controllers/LoadOrchestrator.js';
 
 export function loadReportComponents() {
@@ -99,10 +98,10 @@ async function handleApplyFilter() {
     globalState.setState({ reportData: filteredData });
     console.log("Filtered report data:", filteredData);
 
-    // Re-render the report with filtered data
+    // Refresh the report with filtered data
     const reportType = globalState.getState().selectedReportType;
     const orchestrator = new LoadOrchestrator(reportType);
-    await orchestrator.orchestrateLoad();
+    orchestrator.refreshReport(); // Use refresh instead of orchestrateLoad
 }
 
 function onDateRangeSelect(selectedRange, customData) {
