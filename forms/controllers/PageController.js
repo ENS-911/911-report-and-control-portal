@@ -42,6 +42,7 @@ class PageController {
         if (this.currentPage.length > 0) {
             this.pages.push(this.currentPage);
         }
+        console.log("Finalized Pages Data:", this.pages);
         return this.pages;
     }
 }

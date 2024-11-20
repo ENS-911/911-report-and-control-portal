@@ -4,7 +4,7 @@ import { fetchReportData } from '../../api/fetchReportData.js';
 import { createTitleComponent } from '../components/reportTitle.js';
 import { createTableComponent } from '../components/tableComponent.js';
 import { allAgencyTypes } from '../components/allAgencyTypes.js';
-import { checkAgencyTypes } from '../controllers/checkAgencyTypes.js';
+import { renderPages } from '../components/pageBuilder.js';
 import PageController from '../controllers/PageController.js';
 
 // Component Registry
@@ -26,7 +26,7 @@ export class LoadOrchestrator {
     constructor(templateName) {
         this.templateName = templateName;
         this.templateComponents = templateConfigurations[templateName] || [];
-        this.pageController = new PageController();
+        this.pageController = null;
     }
 
     async orchestrateLoad() {
@@ -41,6 +41,15 @@ export class LoadOrchestrator {
 
         // Initialize components based on the dynamic order
         this.initializeComponents(dynamicOrder);
+
+        const pageController = this.pageController;
+    if (pageController) {
+        const pages = pageController.finalizePages().filter(page => page.length > 0);
+        console.log("Pages to render after orchestrating load:", pages);
+        renderPages(pages); // Explicitly trigger rendering
+    } else {
+        console.error("PageController not initialized.");
+    }
     }
 
     async fetchAndSetReportData() {
@@ -120,11 +129,16 @@ export class LoadOrchestrator {
         this.pageController.addContentToPage(titleComponent, true);
     }
 
-    initializeAgencyTypeComponent(reportData) {
+    initializeAgencyTypeComponent() {
+
+        const reportData = globalState.getState().reportData;
+
         if (!reportData || !Array.isArray(reportData)) {
             console.error("Invalid or missing report data for Agency Type Component.");
             return;
         }
+
+        
     
         const agencyTypes = this.checkAgencyTypes(reportData); // Pass reportData to ensure accurate results
         console.log("Agency Types for rendering:", agencyTypes);
