@@ -4,6 +4,7 @@ import { globalState } from '../../reactive/state.js';
 
 export function ReportTypeSelector() {
     const container = document.createElement('div');
+    container.id = "reportTypeSelector";
     container.innerHTML = `
         <label for="reportTypeSelector">Select Report Type</label>
         <select id="reportTypeSelector">

@@ -392,7 +392,7 @@ header {
     margin: 0 auto;
   }
 
-  #reportDateRangeSelector, #customDateInput {
+  #reportDateRangeSelector, #customDateInput, #agencyFilterDropdown, #reportTypeSelector {
     display: flex;
     flex-direction: column;
     justify-content: center;
