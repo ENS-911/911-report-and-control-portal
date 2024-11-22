@@ -23,26 +23,35 @@ class PageController {
         this.currentPageHeight = 0;
     }
 
-    // Add content and manage page breaks
     addContentToPage(contentElement, isTitle = false) {
         const contentHeight = measureComponentHeight(contentElement);
-
-        // Only trigger page break if content exceeds available height
+        console.log("Measuring content for page:", {
+            element: contentElement,
+            height: contentHeight,
+        });
+    
+        // Check if new content fits within the page
         if (this.currentPageHeight + contentHeight > this.maxPageHeight && !isTitle) {
+            console.log("Content exceeds page height, starting a new page.");
             this.startNewPage();
         }
-
+    
         // Add content to the current page
         this.currentPage.push({ element: contentElement, height: contentHeight });
         this.currentPageHeight += contentHeight;
+    
+        console.log("Content added to page:", {
+            currentPage: this.currentPage,
+            totalPages: this.pages.length + 1,
+        });
     }
-
-    // Finalize pages
+    
     finalizePages() {
         if (this.currentPage.length > 0) {
             this.pages.push(this.currentPage);
         }
-        console.log("Finalized Pages Data:", this.pages);
+    
+        console.log("Finalized Pages:", this.pages);
         return this.pages;
     }
 }
