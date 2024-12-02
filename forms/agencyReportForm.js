@@ -5,11 +5,11 @@ import { createTableComponent } from '../forms/components/tableComponent.js';
 import { allAgencyTypes } from '../forms/components/allAgencyTypes.js';
 import { singleAgencyType } from '../forms/components/singleAgencyType.js';
 import { LoadOrchestrator } from '../forms/controllers/LoadOrchestrator.js';
+import { incidentTypeChart } from '../forms/components/incidentTypeChart.js';
 
-// Define the Agency Report configuration
 const agencyReportForm = {
     name: "Agency Report",
-    components: ['title', 'agencyType', 'table'],
+    components: ['title', 'agencyType', 'incidentType', 'table'], // Added 'incidentType'
 
     getTitle: () => {
         const state = globalState.getState();
@@ -26,8 +26,13 @@ const agencyReportForm = {
             agencyType: () => {
                 const reportData = globalState.getState().reportData || [];
                 const agencyTypes = [...new Set(reportData.map(item => item.agency_type))];
-                const agencyTypeComponent = agencyTypes.length > 1 ? allAgencyTypes() : singleAgencyType();
+                const agencyTypeComponent =
+                    agencyTypes.length > 1 ? allAgencyTypes() : singleAgencyType();
                 pageController.addContentToPage(agencyTypeComponent);
+            },
+            incidentType: () => {
+                const incidentTypeComponent = incidentTypeChart();
+                pageController.addContentToPage(incidentTypeComponent);
             },
             table: () => {
                 createTableComponent(pageController);

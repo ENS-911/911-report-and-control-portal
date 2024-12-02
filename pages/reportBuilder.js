@@ -19,7 +19,9 @@ export function loadPage() {
         loadForm(reportType);
     });
 
-    calculateAndSaveScaleRatio(containerWidth);
+    globalState.setState({ scaleRatio: 1, });
+
+    //calculateAndSaveScaleRatio(containerWidth);
 
     // Run generateReport only when both `reportData` and `pageController` are available
     globalState.subscribe((state) => {

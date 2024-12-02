@@ -1,10 +1,11 @@
-// PageController.js
 import { measureComponentHeight, measureFooterHeight } from '../formUtils/measurementUtils.js';
-import { getMaxPageHeight } from '../formUtils/dpiUtils.js';
+import { getMaxPageHeight, calculateAndSaveScaleRatio } from '../formUtils/dpiUtils.js';
 
 const footerHeight = measureFooterHeight();
 const baseMaxPageHeight = getMaxPageHeight();
 const adjustedMaxPageHeight = baseMaxPageHeight - footerHeight;
+const contentBody = document.getElementById('contentBody');
+const containerWidth = 0.9 * contentBody.offsetWidth;
 
 class PageController {
     constructor() {
@@ -16,42 +17,47 @@ class PageController {
 
     // Start a new page and push to pages array
     startNewPage() {
+        console.log("Starting a new page...");
         if (this.currentPage.length > 0) {
-            this.pages.push(this.currentPage);
+            this.pages.push([...this.currentPage]); // Push a copy to avoid mutation
         }
         this.currentPage = [];
         this.currentPageHeight = 0;
+        console.log("New page started. Current total pages:", this.pages.length);
     }
 
+    // Add content to the current page and manage page breaks
     addContentToPage(contentElement, isTitle = false) {
         const contentHeight = measureComponentHeight(contentElement);
-        console.log("Measuring content for page:", {
-            element: contentElement,
-            height: contentHeight,
-        });
-    
-        // Check if new content fits within the page
+        console.log("Measured content height:", contentHeight);
+
+        if (!contentHeight) {
+            console.error("Content height could not be measured:", contentElement);
+            return;
+        }
+
+        // Check if the content fits on the current page
         if (this.currentPageHeight + contentHeight > this.maxPageHeight && !isTitle) {
-            console.log("Content exceeds page height, starting a new page.");
+            console.log("Content exceeds max page height. Starting a new page...");
             this.startNewPage();
         }
-    
+
         // Add content to the current page
+        console.log("Adding content to the page:", contentElement);
         this.currentPage.push({ element: contentElement, height: contentHeight });
         this.currentPageHeight += contentHeight;
-    
-        console.log("Content added to page:", {
-            currentPage: this.currentPage,
-            totalPages: this.pages.length + 1,
-        });
+        console.log("Updated current page height:", this.currentPageHeight);
     }
-    
+
+    // Finalize pages and return the array of pages
     finalizePages() {
         if (this.currentPage.length > 0) {
-            this.pages.push(this.currentPage);
+            console.log("Finalizing current page...");
+            this.pages.push([...this.currentPage]); // Push a copy to avoid mutation
         }
-    
-        console.log("Finalized Pages:", this.pages);
+
+        console.log("Finalized Pages Data:", this.pages);
+        calculateAndSaveScaleRatio(containerWidth);
         return this.pages;
     }
 }

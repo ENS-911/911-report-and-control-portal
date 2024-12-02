@@ -69,10 +69,14 @@ export function getPageHeight() {
 }
 
 export function measureComponentHeight(element) {
-    // Append to a hidden container to measure accurately
+    // Temporarily append to hidden container for accurate measurement
     const hiddenContainer = document.getElementById('reportMeasurementArea');
+    hiddenContainer.style.transform = 'none'; // Disable scaling for accurate height
     hiddenContainer.appendChild(element);
-    const height = element.offsetHeight;
+
+    const height = element.getBoundingClientRect().height; // Get raw height
     hiddenContainer.removeChild(element);
+
+    console.log(`Measured raw content height (unscaled): ${height}px`);
     return height;
 }

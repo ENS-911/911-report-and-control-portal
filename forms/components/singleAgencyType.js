@@ -40,7 +40,7 @@ export function singleAgencyType() {
         title: {
             text: `Distribution for ${agencyName}`,
             style: {
-                fontSize: `${14 * scaleRatio}px`,
+                fontSize: `${12 * scaleRatio}px`,
             },
         },
         series: [
@@ -56,12 +56,12 @@ export function singleAgencyType() {
     const labelContainer = document.createElement('div');
     labelContainer.className = 'label-container';
     labelContainer.style.width = '50%';
-    labelContainer.style.padding = `${10 * scaleRatio}px`;
+    labelContainer.style.padding = `${4 * scaleRatio}px`;
 
     const titleLabel = document.createElement('h3');
     titleLabel.textContent = 'Number of Events for This Report';
     titleLabel.style.textAlign = 'center';
-    titleLabel.style.fontSize = `${16 * scaleRatio}px`;
+    titleLabel.style.fontSize = `${14 * scaleRatio}px`;
     labelContainer.appendChild(titleLabel);
 
     // Add battalion names and counts
@@ -70,15 +70,15 @@ export function singleAgencyType() {
         battalionLabel.style.display = 'flex';
         battalionLabel.style.justifyContent = 'space-between';
         battalionLabel.style.borderBottom = `${1 * scaleRatio}px solid #ccc`;
-        battalionLabel.style.padding = `${5 * scaleRatio}px 0`;
+        battalionLabel.style.padding = `${2 * scaleRatio}px 0`;
 
         const battalionName = document.createElement('span');
         battalionName.textContent = name;
-        battalionName.style.fontSize = `${14 * scaleRatio}px`;
+        battalionName.style.fontSize = `${12 * scaleRatio}px`;
 
         const battalionCount = document.createElement('span');
         battalionCount.textContent = y;
-        battalionCount.style.fontSize = `${14 * scaleRatio}px`;
+        battalionCount.style.fontSize = `${12 * scaleRatio}px`;
 
         battalionLabel.appendChild(battalionName);
         battalionLabel.appendChild(battalionCount);
@@ -90,15 +90,15 @@ export function singleAgencyType() {
     totalLabel.style.display = 'flex';
     totalLabel.style.justifyContent = 'space-between';
     totalLabel.style.fontWeight = 'bold';
-    totalLabel.style.padding = `${10 * scaleRatio}px 0`;
+    totalLabel.style.padding = `${4 * scaleRatio}px 0`;
 
     const totalText = document.createElement('span');
     totalText.textContent = 'Total';
-    totalText.style.fontSize = `${16 * scaleRatio}px`;
+    totalText.style.fontSize = `${14 * scaleRatio}px`;
 
     const totalCount = document.createElement('span');
     totalCount.textContent = totalEvents;
-    totalCount.style.fontSize = `${16 * scaleRatio}px`;
+    totalCount.style.fontSize = `${14 * scaleRatio}px`;
 
     totalLabel.appendChild(totalText);
     totalLabel.appendChild(totalCount);
