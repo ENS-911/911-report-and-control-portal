@@ -1,15 +1,17 @@
 import { globalState } from '../../reactive/state.js';
 
-export function singleAgencyType() {
+export async function singleAgencyType() {
     const scaleRatio = globalState.getState().scaleRatio || 1;
-
     const reportData = globalState.getState().reportData || [];
     const agencyName = reportData.length > 0 ? reportData[0].agency_type : 'Unknown Agency';
+
+    console.log('Scale Ratio in singleAgencyType:', scaleRatio);
 
     // Create container
     const container = document.createElement('div');
     container.className = 'single-agency-type';
     container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
     container.style.justifyContent = 'space-between';
     container.style.alignItems = 'center';
 
@@ -26,31 +28,19 @@ export function singleAgencyType() {
         y: count,
     }));
 
+    // Handle case when chartData is empty
+    if (chartData.length === 0) {
+        const noDataMessage = document.createElement('div');
+        noDataMessage.textContent = 'No data available for the selected agency.';
+        container.appendChild(noDataMessage);
+        return container; // Return container with no data message
+    }
+
     // Left: Create pie chart container
     const chartContainer = document.createElement('div');
     chartContainer.className = 'pie-chart-container';
     chartContainer.style.width = `${300 * scaleRatio}px`;
     chartContainer.style.height = `${300 * scaleRatio}px`;
-
-    // Render pie chart using global Highcharts
-    Highcharts.chart(chartContainer, {
-        chart: {
-            type: 'pie',
-        },
-        title: {
-            text: `Distribution for ${agencyName}`,
-            style: {
-                fontSize: `${12 * scaleRatio}px`,
-            },
-        },
-        series: [
-            {
-                name: 'Events',
-                colorByPoint: true,
-                data: chartData,
-            },
-        ],
-    });
 
     // Right: Create label container
     const labelContainer = document.createElement('div');
@@ -58,6 +48,7 @@ export function singleAgencyType() {
     labelContainer.style.width = '50%';
     labelContainer.style.padding = `${4 * scaleRatio}px`;
 
+    // Add title label
     const titleLabel = document.createElement('h3');
     titleLabel.textContent = 'Number of Events for This Report';
     titleLabel.style.textAlign = 'center';
@@ -108,5 +99,43 @@ export function singleAgencyType() {
     container.appendChild(chartContainer);
     container.appendChild(labelContainer);
 
+    // **Wait for the chart to render before returning the container**
+    await new Promise((resolve, reject) => {
+        try {
+            // Render pie chart using Highcharts
+            Highcharts.chart(chartContainer, {
+                chart: {
+                    type: 'pie',
+                    events: {
+                        load: function () {
+                            // Chart has finished loading
+                            resolve();
+                        },
+                    },
+                },
+                title: {
+                    text: `Distribution for ${agencyName}`,
+                    style: {
+                        fontSize: `${12 * scaleRatio}px`,
+                    },
+                },
+                series: [
+                    {
+                        name: 'Events',
+                        colorByPoint: true,
+                        data: chartData,
+                    },
+                ],
+                credits: { enabled: false },
+                exporting: { enabled: false },
+            });
+        } catch (error) {
+            console.error('Error rendering Highcharts:', error);
+            // Resolve even if the chart fails to render
+            resolve();
+        }
+    });
+
+    // **Return the container with the chart and labels after the chart has rendered**
     return container;
 }

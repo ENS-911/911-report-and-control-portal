@@ -6,8 +6,10 @@ export function incidentTypeChart() {
 
     // Create container for the component
     const container = document.createElement('div');
+    container.style.width = '100%';
     container.className = 'incident-type-chart';
     container.style.padding = `${5 * scaleRatio}px`;
+    container.style.boxSizing = 'border-box';
 
     // Count occurrences of each incident type
     const incidentCounts = {};
@@ -24,7 +26,7 @@ export function incidentTypeChart() {
     // Create chart container
     const chartContainer = document.createElement('div');
     chartContainer.style.width = '100%';
-    chartContainer.style.height = `${250 * scaleRatio}px`;
+    chartContainer.style.height = `${300 * scaleRatio}px`;
     container.appendChild(chartContainer);
 
     // Render bar chart using Highcharts

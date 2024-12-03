@@ -38,9 +38,11 @@ export function renderPages(pages) {
     contentBody.innerHTML = ''; // Clear previous content
 
     requestAnimationFrame(() => {
-        const containerWidth = 0.9 * contentBody.offsetWidth;
+        const inchesToPixels = (inches, dpi = 96) => inches * dpi;
+        const dpi = 96;
+        const containerWidth = inchesToPixels(8.5, dpi)
         const { width, height } = getPageDimensions(containerWidth);
-        const scaleRatio = globalState.getState().scaleRatio;
+        //const scaleRatio = globalState.getState().scaleRatio;
 
         pages.forEach((page, pageIndex) => {
             const pageContainer = document.createElement('div');

@@ -1,3 +1,4 @@
+import { globalState } from '../../reactive/state.js';
 import { measureComponentHeight, measureFooterHeight } from '../formUtils/measurementUtils.js';
 import { getMaxPageHeight, calculateAndSaveScaleRatio } from '../formUtils/dpiUtils.js';
 
@@ -27,14 +28,17 @@ class PageController {
     }
 
     // Add content to the current page and manage page breaks
-    addContentToPage(contentElement, isTitle = false) {
-        const contentHeight = measureComponentHeight(contentElement);
+    async addContentToPage(contentElement, isTitle = false) {
+        const contentHeight = await measureComponentHeight(contentElement);
         console.log("Measured content height:", contentHeight);
 
         if (!contentHeight) {
             console.error("Content height could not be measured:", contentElement);
             return;
         }
+
+        console.log('Type of contentHeight:', typeof contentHeight);
+        console.log('Type of currentPageHeight before update:', typeof this.currentPageHeight);
 
         // Check if the content fits on the current page
         if (this.currentPageHeight + contentHeight > this.maxPageHeight && !isTitle) {
@@ -51,13 +55,14 @@ class PageController {
 
     // Finalize pages and return the array of pages
     finalizePages() {
+        //const scaleRatio = calculateAndSaveScaleRatio(containerWidth);
+        //globalState.setState(scaleRatio);
         if (this.currentPage.length > 0) {
-            console.log("Finalizing current page...");
-            this.pages.push([...this.currentPage]); // Push a copy to avoid mutation
+            this.pages.push([...this.currentPage]);
+            console.log('Finalized pages. Total pages:', this.pages.length);
+        } else {
+            console.log('No content in current page to finalize.');
         }
-
-        console.log("Finalized Pages Data:", this.pages);
-        calculateAndSaveScaleRatio(containerWidth);
         return this.pages;
     }
 }

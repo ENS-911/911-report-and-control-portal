@@ -16,37 +16,49 @@ const agencyReportForm = {
         return state.reportTitle || "Agency Report";
     },
 
-    initializeComponents(pageController, componentOrder) {
+    async initializeComponents(pageController, componentOrder) {
         const components = {
-            title: () => {
+            title: async () => {
                 const titleText = this.getTitle();
                 const titleComponent = createTitleComponent(titleText);
-                pageController.addContentToPage(titleComponent, true);
+                await pageController.addContentToPage(titleComponent, true);
             },
-            agencyType: () => {
+            agencyType: async () => {
                 const reportData = globalState.getState().reportData || [];
                 const agencyTypes = [...new Set(reportData.map(item => item.agency_type))];
-                const agencyTypeComponent =
-                    agencyTypes.length > 1 ? allAgencyTypes() : singleAgencyType();
-                pageController.addContentToPage(agencyTypeComponent);
+                let agencyTypeComponent;
+            
+                if (agencyTypes.length > 1) {
+                    agencyTypeComponent = await allAgencyTypes(); // Ensure this function returns a Node
+                } else {
+                    agencyTypeComponent = await singleAgencyType(); // This should now return a Node
+                }
+            
+                // Check if agencyTypeComponent is a valid Node
+                if (!agencyTypeComponent || !(agencyTypeComponent instanceof Node)) {
+                    console.error('agencyTypeComponent is not a valid DOM Node:', agencyTypeComponent);
+                    return; // Skip adding this component to the page
+                }
+            
+                await pageController.addContentToPage(agencyTypeComponent);
             },
-            incidentType: () => {
+            incidentType: async () => {
                 const incidentTypeComponent = incidentTypeChart();
-                pageController.addContentToPage(incidentTypeComponent);
+                await pageController.addContentToPage(incidentTypeComponent);
             },
-            table: () => {
-                createTableComponent(pageController);
+            table: async () => {
+                await createTableComponent(pageController);
             },
         };
 
-        componentOrder.forEach((componentName) => {
+        for (const componentName of componentOrder) {
             if (components[componentName]) {
                 console.log(`Initializing component: ${componentName}`);
-                components[componentName]();
+                await components[componentName](); // Properly await the async function
             } else {
                 console.warn(`Component ${componentName} is not registered.`);
             }
-        });
+        }
     },
 };
 

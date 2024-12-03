@@ -670,3 +670,14 @@ body {
     font-weight: bold;
     margin-top: 10px;
 }
+
+#reportMeasurementArea,
+#reportMeasurementArea *,
+#reportMeasurementArea *::before,
+#reportMeasurementArea *::after {
+    transform: none !important;
+    transform-origin: initial !important;
+    zoom: 1 !important; /* Reset any zoom applied */
+    font-size: initial !important; /* Reset font size */
+    box-sizing: content-box !important;
+}

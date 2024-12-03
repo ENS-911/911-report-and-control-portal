@@ -42,9 +42,9 @@ export class LoadOrchestrator {
             console.log("Component order from template:", componentOrder);
     
             this.pageController = new PageController();
-            this.templateConfig.initializeComponents(this.pageController, componentOrder);
+            await this.templateConfig.initializeComponents(this.pageController, componentOrder);
     
-            const pages = this.pageController.finalizePages().filter((page) => page.length > 0);
+            const pages = this.pageController.finalizePages()
             console.log("Pages finalized:", pages);
             renderPages(pages);
         } catch (error) {
@@ -54,7 +54,7 @@ export class LoadOrchestrator {
     
               
 
-    refreshReport() {
+    async refreshReport() {
         try {
             // Use existing report data
             const reportData = globalState.getState().reportData || [];
@@ -62,20 +62,23 @@ export class LoadOrchestrator {
                 console.error("No report data available for refreshing.");
                 return;
             }
-
+    
             // Reload components and re-render
             const componentOrder = this.templateConfig.components;
             console.log("Refreshing components with order:", componentOrder);
-
+    
             this.pageController = new PageController();
-            this.templateConfig.initializeComponents(this.pageController, componentOrder);
-
+    
+            // Await the initialization of components
+            await this.templateConfig.initializeComponents(this.pageController, componentOrder);
+    
+            // Finalize pages after components are initialized
             const pages = this.pageController.finalizePages().filter(page => page.length > 0);
             renderPages(pages);
         } catch (error) {
             console.error("Error in refreshReport:", error);
         }
-    }
+    }    
 
     async fetchAndSetReportData() {
         try {

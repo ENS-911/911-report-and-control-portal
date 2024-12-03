@@ -1,4 +1,5 @@
 // formUtils/measurementUtils.js
+import { globalState } from '../../reactive/state.js';
 
 export function measureRowAndHeaderHeights() {
     const tempTable = document.createElement('table');
@@ -68,15 +69,27 @@ export function getPageHeight() {
     return pageWidth * aspectRatio;
 }
 
-export function measureComponentHeight(element) {
-    // Temporarily append to hidden container for accurate measurement
+export async function measureComponentHeight(element) {
+    if (!element || !(element instanceof Node)) {
+        throw new TypeError('measureComponentHeight: element is not a valid DOM Node');
+    }
+
     const hiddenContainer = document.getElementById('reportMeasurementArea');
-    hiddenContainer.style.transform = 'none'; // Disable scaling for accurate height
+
+    globalState.setState({ scaleRatio: 1 });
+
+    // Append the element to the hidden container
     hiddenContainer.appendChild(element);
 
-    const height = element.getBoundingClientRect().height; // Get raw height
+    // Wait for the element to render
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    // Measure the height
+    const height = element.offsetHeight;
+    console.log(`Measured content height: ${height}px`);
+
+    // Remove the element from the DOM
     hiddenContainer.removeChild(element);
 
-    console.log(`Measured raw content height (unscaled): ${height}px`);
     return height;
 }

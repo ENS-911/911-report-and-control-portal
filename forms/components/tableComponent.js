@@ -1,7 +1,7 @@
 import { globalState } from '../../reactive/state.js';
 import { measureComponentHeight } from '../formUtils/measurementUtils.js';
 
-export function createTableComponent(pageController) {
+export async function createTableComponent(pageController) {
     const data = globalState.getState().reportData || [];
 
     // Create the table header element
@@ -35,7 +35,7 @@ export function createTableComponent(pageController) {
     let accumulatedHeight = 0;
 
     // Iterate through each row of data and measure each dynamically
-    data.forEach((item, index) => {
+    for (const item of data) {
         const row = document.createElement('tr');
 
         // Populate row cells
@@ -47,7 +47,7 @@ export function createTableComponent(pageController) {
             row.appendChild(cell);
         });
 
-        const rowHeight = measureComponentHeight(row);
+        const rowHeight = await measureComponentHeight(row);
         accumulatedHeight = pageController.currentPageHeight + rowHeight;
 
         // Check if adding the row would exceed the page height
@@ -60,5 +60,5 @@ export function createTableComponent(pageController) {
         // Add row to the current page's tbody
         tbody.appendChild(row);
         pageController.currentPageHeight = accumulatedHeight;
-    });
+    };
 }
