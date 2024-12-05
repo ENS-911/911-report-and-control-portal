@@ -4,6 +4,9 @@ import { globalState } from '../../reactive/state.js';
 import { fetchReportData } from '../../api/fetchReportData.js';
 import { renderPages } from '../components/pageBuilder.js';
 import PageController from './PageController.js';
+import { createTitleComponent } from '../components/reportTitle.js';
+import { createDivComponent } from '../components/createDivComponent.js';
+import { createTableComponent } from '../components/tableComponent.js';
 
 const templateRegistry = new Map();
 
@@ -27,7 +30,7 @@ export class LoadOrchestrator {
         try {
             console.log("Starting orchestrateLoad...");
 
-            // Explicitly check if reportData exists and has content
+            // Check if reportData exists and has content
             let reportData = globalState.getState().reportData;
             if (!reportData || reportData.length === 0) {
                 console.log("No report data found. Fetching new data...");
@@ -40,20 +43,66 @@ export class LoadOrchestrator {
 
             console.log("Report data available for orchestrating load:", reportData);
 
+            // Initialize PageController with standard page height
+            const MAX_PAGE_HEIGHT = 1056; // Adjust as per your requirements
+            this.pageController = new PageController(MAX_PAGE_HEIGHT);
+            console.log("PageController initialized.");
+
+            // Initialize components based on template configuration
             const componentOrder = this.templateConfig.components;
             console.log("Component order from template:", componentOrder);
 
-            this.pageController = new PageController();
-            await this.pageController.initialize(); // Initialize PageController (async)
-            console.log("PageController initialized.");
+            for (const componentName of componentOrder) {
+                if (!componentName) {
+                    console.warn(`Component name is undefined or empty.`);
+                    continue; // Skip undefined or empty component names
+                }
 
-            await this.templateConfig.initializeComponents(this.pageController, componentOrder);
-            console.log("Components initialized.");
+                switch (componentName) {
+                    case 'title':
+                        const title = createTitleComponent(component.text);
+                        await this.pageController.addComponent(title);
+                        console.log("Added title component.");
+                        break;
+                    case 'agencyType':
+                        const agencyTypeHTML = `
+                            <p>All Agency Types Content</p>
+                            <!-- Add more HTML as needed -->
+                        `;
+                        const agencyTypeDiv = createDivComponent('all-agency-types', agencyTypeHTML);
+                        await this.pageController.addComponent(agencyTypeDiv);
+                        console.log("Added agency type component.");
+                        break;
+                    case 'incidentType':
+                        const incidentTypeHTML = `
+                            <p>Incident Type Chart Content</p>
+                            <!-- Add more HTML or embed charts as needed -->
+                        `;
+                        const incidentTypeDiv = createDivComponent('incident-type-chart', incidentTypeHTML);
+                        await this.pageController.addComponent(incidentTypeDiv);
+                        console.log("Added incident type component.");
+                        break;
+                    case 'table':
+                        const table = createTableComponent(reportData);
+                        await this.pageController.addComponent(table);
+                        console.log("Added table component.");
+                        break;
+                    default:
+                        console.warn(`Unknown component type: ${component.type}`);
+                }
+            }
 
-            const pages = this.pageController.finalizePages();
-            console.log("Pages finalized:", pages);
+            // Finalize all pages by adding footers
+            if (typeof this.pageController.finalizePages === 'function') {
+                this.pageController.finalizePages();
+                console.log("Pages finalized with footers.");
+            } else {
+                console.error("finalizePages method is not defined in PageController.");
+            }
 
-            renderPages(pages);
+            // Render all pages to the DOM
+            renderPages(this.pageController.pages);
+            console.log("Rendered all pages.");
         } catch (error) {
             console.error("Error in orchestrateLoad:", error);
         }
@@ -61,6 +110,8 @@ export class LoadOrchestrator {
               
     async refreshReport() {
         try {
+            console.log("Starting refreshReport...");
+
             // Use existing report data
             const reportData = globalState.getState().reportData || [];
             if (reportData.length === 0) {
@@ -68,22 +119,57 @@ export class LoadOrchestrator {
                 return;
             }
 
-            // Reload components and re-render
-            const componentOrder = this.templateConfig.components;
-            console.log("Refreshing components with order:", componentOrder);
-
-            this.pageController = new PageController();
-            await this.pageController.initialize(); // Initialize PageController (async)
+            // Initialize a new PageController
+            const MAX_PAGE_HEIGHT = 1056; // Adjust as per your requirements
+            this.pageController = new PageController(MAX_PAGE_HEIGHT);
             console.log("PageController initialized for refresh.");
 
-            // Await the initialization of components
-            await this.templateConfig.initializeComponents(this.pageController, componentOrder);
-            console.log("Components refreshed.");
+            // Initialize components based on template configuration
+            const componentOrder = this.templateConfig.components;
+            console.log("Component order from template:", componentOrder);
 
-            // Finalize pages after components are initialized
-            const pages = this.pageController.finalizePages().filter(page => page.length > 0);
-            console.log("Pages finalized for refresh:", pages);
-            renderPages(pages);
+            for (const component of componentOrder) {
+                switch (component.type) {
+                    case 'title':
+                        const title = createTitleComponent(component.text);
+                        await this.pageController.addComponent(title);
+                        console.log("Added title component.");
+                        break;
+                    case 'agencyType':
+                        const agencyTypeHTML = `
+                            <p>All Agency Types Content</p>
+                            <!-- Add more HTML as needed -->
+                        `;
+                        const agencyTypeDiv = createDivComponent('all-agency-types', agencyTypeHTML);
+                        await this.pageController.addComponent(agencyTypeDiv);
+                        console.log("Added agency type component.");
+                        break;
+                    case 'incidentType':
+                        const incidentTypeHTML = `
+                            <p>Incident Type Chart Content</p>
+                            <!-- Add more HTML or embed charts as needed -->
+                        `;
+                        const incidentTypeDiv = createDivComponent('incident-type-chart', incidentTypeHTML);
+                        await this.pageController.addComponent(incidentTypeDiv);
+                        console.log("Added incident type component.");
+                        break;
+                    case 'table':
+                        const table = createTableComponent(reportData);
+                        await this.pageController.addComponent(table);
+                        console.log("Added table component.");
+                        break;
+                    default:
+                        console.warn(`Unknown component type: ${component.type}`);
+                }
+            }
+
+            // Finalize all pages by adding footers
+            this.pageController.finalizePages();
+            console.log("Pages finalized with footers.");
+
+            // Render all pages to the DOM
+            renderPages(this.pageController.pages);
+            console.log("Refreshed and rendered all pages.");
         } catch (error) {
             console.error("Error in refreshReport:", error);
         }

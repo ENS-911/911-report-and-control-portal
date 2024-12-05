@@ -33,42 +33,54 @@ function createFooter(pageIndex, totalPages) {
     return footer;
 }
 
+// pageBuilder.js
+
 export function renderPages(pages) {
-    const contentBody = document.getElementById('contentBody');
-    contentBody.innerHTML = ''; // Clear previous content
+    const reportContainer = document.getElementById('contentBody');
+    if (!reportContainer) {
+        console.error('Report container not found.');
+        return;
+    }
 
-    requestAnimationFrame(() => {
-        const inchesToPixels = (inches, dpi = 96) => inches * dpi;
-        const dpi = 96;
-        const containerWidth = inchesToPixels(8.5, dpi)
-        const { width, height } = getPageDimensions(containerWidth);
+    reportContainer.innerHTML = ''; // Clear existing content
 
-        pages.forEach((page, pageIndex) => {
-            const pageContainer = document.createElement('div');
-            pageContainer.className = 'page';
-            pageContainer.style.width = `${width}px`;
-            pageContainer.style.height = `${height}px`;
-            pageContainer.style.position = 'relative';
+    const totalPages = pages.length;
+    console.log(`Total Pages to render: ${totalPages}`);
 
-            page.forEach((contentItem) => {
-                pageContainer.appendChild(contentItem.element);
-            });
+    pages.forEach((page, pageIndex) => {
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'page';
+        pageDiv.style.width = '816px'; // 8.5 inches * 96 DPI
+        pageDiv.style.height = '1056px'; // 11 inches * 96 DPI
+        pageDiv.style.position = 'relative';
+        pageDiv.style.marginBottom = '20px'; // Space between pages
+        pageDiv.style.pageBreakAfter = 'always'; // Ensure page breaks in print/PDF
 
-            // Add footer to each page container
-            const footer = createFooter(pageIndex, pages.length);
-            pageContainer.appendChild(footer);
+        // Append each content to the page
+        page.forEach((content, contentIndex) => {
+            // Enhanced logging
+            console.log(`Appending content to Page ${pageIndex + 1}, Content ${contentIndex + 1}:`, content, 'Instance of Node:', content instanceof Node);
 
-            contentBody.appendChild(pageContainer);
+            if (content instanceof Node) {
+                pageDiv.appendChild(content);
+            } else {
+                console.error(`Content at Page ${pageIndex + 1}, Content ${contentIndex + 1} is not a Node:`, content);
+            }
         });
 
-        // Apply scaling to tables
-        const tables = document.querySelectorAll("table.report-table");
-        tables.forEach((table, index) => {
-            scaleTableComponent(table);
-        });
+        // Append footer to the page
+        const footer = createFooter(pageIndex, totalPages);
+        if (footer instanceof Node) {
+            pageDiv.appendChild(footer);
+            console.log(`Appended footer to Page ${pageIndex + 1}`);
+        } else {
+            console.error(`Footer for Page ${pageIndex + 1} is not a valid Node:`, footer);
+        }
 
-        console.log("Rendered pages with footer and adjusted content height.");
+        reportContainer.appendChild(pageDiv);
     });
+
+    console.log(`Rendered ${totalPages} pages.`);
 }
 
 export function scaleTableComponent(table, scaleRatio) {

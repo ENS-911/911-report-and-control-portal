@@ -1,3 +1,5 @@
+// agencyReportForm.js
+
 import { DateRangeSelector } from '../forms/components/DateRangeSelector.js';
 import { globalState } from '../reactive/state.js';
 import { createTitleComponent } from '../forms/components/reportTitle.js';
@@ -11,7 +13,7 @@ const agencyReportForm = {
     name: "Agency Report",
     components: ['title', 'agencyType', 'incidentType', 'table'], // Added 'incidentType'
 
-    getTitle: () => {
+    getTitle: function () { // Changed to regular function to use 'this'
         const state = globalState.getState();
         return state.reportTitle || "Agency Report";
     },
@@ -44,6 +46,10 @@ const agencyReportForm = {
             },
             incidentType: async () => {
                 const incidentTypeComponent = incidentTypeChart();
+                if (!incidentTypeComponent || !(incidentTypeComponent instanceof Node)) {
+                    console.error('incidentTypeComponent is not a valid DOM Node:', incidentTypeComponent);
+                    return;
+                }
                 await pageController.addContentToPage(incidentTypeComponent);
             },
             table: async () => {

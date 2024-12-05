@@ -1,53 +1,131 @@
 // PageController.js
 
-import { measureFooterHeight } from '../formUtils/measurementUtils.js';
-import { getMaxPageHeight } from '../formUtils/dpiUtils.js';
+import { measureComponentHeight } from '../formUtils/measurementUtils.js';
 
 class PageController {
-    constructor() {
+    constructor(maxPageHeight = 1056) { // Default to standard letter height
         this.pages = [];
-        this.currentPage = [];
-        this.currentPageHeight = 0;
-        this.footerHeight = 0;
-        this.maxPageHeight = 0; // Will be set after footer height measurement
+        this.currentPage = this.createNewPage();
+        this.maxPageHeight = maxPageHeight; // e.g., 1056px
+        this.footerHeight = 50; // As defined in CSS
     }
 
-    // Initialize PageController with footer height and max page height
-    async initialize() {
-        this.footerHeight = await measureFooterHeight();
-        const baseMaxPageHeight = getMaxPageHeight();
-        this.maxPageHeight = baseMaxPageHeight - this.footerHeight;
-        console.log(`Initialized PageController with maxPageHeight: ${this.maxPageHeight}px`);
+    createNewPage() {
+        const page = document.createElement('div');
+        page.className = 'report-page';
+        this.pages.push(page);
+        return page;
     }
 
-    // Start a new page and push to pages array
-    startNewPage() {
-        console.log("Starting a new page...");
-        if (this.currentPage.length > 0) {
-            this.pages.push([...this.currentPage]); // Push a copy to avoid mutation
+    /**
+     * Adds a component to the current page. If the component doesn't fit, finalizes the current page with a footer and starts a new page.
+     * @param {HTMLElement} component - The DOM element to add.
+     * @param {boolean} isTitle - Indicates if the component is the title (affects positioning or styling if needed).
+     */
+    async addContentToPage(component, isTitle = false) {
+        if (!(component instanceof HTMLElement)) {
+            console.error('Invalid component type:', component);
+            return;
         }
-        this.currentPage = [];
-        this.currentPageHeight = 0;
-        console.log("New page started. Current total pages:", this.pages.length);
+
+        // Append the component to the current page
+        this.currentPage.appendChild(component);
+        await this.waitForRender(); // Ensure the component is rendered
+
+        const componentHeight = await measureComponentHeight(component);
+        console.log(`Measured height for component (${component.className || component.tagName}): ${componentHeight}px`);
+
+        const currentPageHeight = this.getPageHeight(this.currentPage);
+        console.log(`Current page height after adding component: ${currentPageHeight}px`);
+
+        if (currentPageHeight > this.maxPageHeight - this.footerHeight) {
+            console.log(`Component height (${componentHeight}px) exceeds available space. Finalizing current page.`);
+            // Remove the component that caused overflow
+            this.currentPage.removeChild(component);
+            // Finalize the current page with a footer
+            this.addFooter(this.pages.length);
+            // Start a new page and add the component there
+            this.currentPage = this.createNewPage();
+            this.currentPage.appendChild(component);
+            await this.waitForRender();
+            const newComponentHeight = await measureComponentHeight(component);
+            console.log(`Measured height for component on new page: ${newComponentHeight}px`);
+        }
     }
 
-    // Add content to the current page and manage page breaks
-    async addContentToPage(contentElement, contentHeight) {
-        console.log("Adding content to the page:", contentElement);
-        this.currentPage.push(contentElement);
-        this.currentPageHeight += contentHeight;
-        console.log("Updated current page height:", this.currentPageHeight);
+    /**
+     * Adds a footer to the specified page.
+     * @param {number} pageNumber - The page number (1-based index).
+     */
+    addFooter(pageNumber) {
+        const footer = this.createFooter(pageNumber, this.pages.length);
+        this.currentPage.appendChild(footer);
     }
 
-    // Finalize pages and return the array of pages
+    /**
+     * Finalizes all pages by adding footers to pages without them.
+     */
     finalizePages() {
-        if (this.currentPage.length > 0) {
-            this.pages.push([...this.currentPage]);
-            console.log('Finalized pages. Total pages:', this.pages.length);
-        } else {
-            console.log('No content in current page to finalize.');
-        }
-        return this.pages;
+        this.pages.forEach((page, index) => {
+            const hasFooter = page.querySelector('.page-footer');
+            if (!hasFooter) {
+                this.addFooter(index + 1);
+            }
+        });
+    }
+
+    /**
+     * Creates a footer element.
+     * @param {number} pageNumber - The current page number.
+     * @param {number} totalPages - The total number of pages.
+     * @returns {HTMLElement} - The footer DOM element.
+     */
+    createFooter(pageNumber, totalPages) {
+        const footer = document.createElement('footer');
+        footer.className = 'page-footer';
+
+        const leftSection = document.createElement('div');
+        leftSection.className = 'footer-left';
+        const formattedDateTime = new Date().toLocaleString();
+        leftSection.innerHTML = `
+            <p>Report Generated: ${formattedDateTime}</p>
+            <p>Page ${pageNumber} of ${totalPages}</p>
+        `;
+
+        const centerSection = document.createElement('div');
+        centerSection.className = 'footer-center';
+        centerSection.textContent = globalState.getState().reportTitle || 'Report Title';
+
+        const rightSection = document.createElement('div');
+        rightSection.className = 'footer-right';
+        const userInfo = JSON.parse(localStorage.getItem('user')) || {};
+        rightSection.innerHTML = `
+            <p>Report Generated By: ${userInfo.fname || ''} ${userInfo.lname || ''}</p>
+            <p>Created With: 911 Emerge-N-See Report Generator</p>
+        `;
+
+        footer.appendChild(leftSection);
+        footer.appendChild(centerSection);
+        footer.appendChild(rightSection);
+
+        return footer;
+    }
+
+    /**
+     * Gets the current height of a page.
+     * @param {HTMLElement} page - The page DOM element.
+     * @returns {number} - The height in pixels.
+     */
+    getPageHeight(page) {
+        return page.scrollHeight;
+    }
+
+    /**
+     * Waits for the next animation frame to ensure rendering is complete.
+     * @returns {Promise} - Resolves on the next animation frame.
+     */
+    waitForRender() {
+        return new Promise(resolve => requestAnimationFrame(resolve));
     }
 }
 

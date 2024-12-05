@@ -4,26 +4,30 @@ import { globalState } from '../../reactive/state.js';
 const measurementArea = document.getElementById('reportMeasurementArea');
 
 export async function measureComponentHeight(element) {
-    if (!measurementArea) {
-        console.error('Measurement area container not found.');
-        return 0;
-    }
+    return new Promise((resolve, reject) => {
+        if (!(element instanceof HTMLElement)) {
+            console.error('Invalid element provided for measurement:', element);
+            return resolve(0); // Fallback to 0 height
+        }
 
-    // Clone the element to prevent mutations in the actual report
-    const clonedElement = element.cloneNode(true);
-    measurementArea.appendChild(clonedElement);
+        // Clone the element to avoid modifying the original
+        const clonedElement = element.cloneNode(true);
+        clonedElement.style.margin = '0'; // Reset margins to avoid unexpected height
+        measurementArea.appendChild(clonedElement);
 
-    // Wait for the browser to render styles
-    const height = await new Promise((resolve) => {
+        // Allow the browser to render the cloned element
         requestAnimationFrame(() => {
-            const measuredHeight = clonedElement.offsetHeight;
-            // Clean up: Remove the cloned element after measurement
+            const height = clonedElement.getBoundingClientRect().height;
             measurementArea.removeChild(clonedElement);
-            resolve(measuredHeight);
+
+            if (isNaN(height)) {
+                console.error('Measured height is NaN for element:', element);
+                resolve(0); // Fallback to 0 height
+            } else {
+                resolve(Math.ceil(height)); // Round up to the nearest integer
+            }
         });
     });
-
-    return height;
 }
 
 export async function measureFooterHeight() {
