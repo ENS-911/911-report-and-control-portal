@@ -1,40 +1,50 @@
+// createTableComponent.js
+
 import { globalState } from '../../reactive/state.js';
 import { measureComponentHeight } from '../formUtils/measurementUtils.js';
 
 export async function createTableComponent(pageController) {
     const data = globalState.getState().reportData || [];
 
-    // Create the table header element
+    // Function to create table header
     function createHeader() {
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
         const headers = ['Agency Type', 'Battalion', 'Creation Date', 'Premise', 'Description'];
 
         headers.forEach(headerText => {
-            const headerCell = document.createElement('th');
-            headerCell.textContent = headerText;
-            headerRow.appendChild(headerCell);
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
         });
 
         thead.appendChild(headerRow);
         return thead;
     }
 
-    // Function to start a new table with header and tbody
-    function startNewTable() {
+    // Function to create a new table with header
+    function createNewTable() {
         const table = document.createElement('table');
         table.classList.add('report-table');
         table.appendChild(createHeader());
         const tbody = document.createElement('tbody');
         table.appendChild(tbody);
-        pageController.addContentToPage(table);
-        return tbody;
+        return table;
     }
 
-    let tbody = startNewTable(); // Start with the first table
-    let accumulatedHeight = 0;
+    // Initialize with the first table
+    let currentTable = createNewTable();
+    pageController.startNewPage(); // Start with a new page
+    await pageController.addContentToPage(currentTable, 0); // Initially, height is 0
+    console.log("Added first table to the page.");
 
-    // Iterate through each row of data and measure each dynamically
+    // Measure header height once for consistency
+    const headerElement = currentTable.querySelector('thead');
+    const headerHeight = await measureComponentHeight(headerElement);
+    console.log(`Measured Header Height: ${headerHeight}px`);
+    let accumulatedHeight = headerHeight;
+
+    // Iterate through each row of data
     for (const item of data) {
         const row = document.createElement('tr');
 
@@ -43,22 +53,53 @@ export async function createTableComponent(pageController) {
             const cell = document.createElement('td');
             cell.textContent = field === 'creation' 
                 ? new Date(item[field]).toLocaleString() 
-                : item[field];
+                : item[field] || 'N/A'; // Handle undefined or null values
             row.appendChild(cell);
         });
 
+        // Append the row to the current table's tbody temporarily to measure its height
+        const tbody = currentTable.querySelector('tbody');
+        tbody.appendChild(row);
         const rowHeight = await measureComponentHeight(row);
-        accumulatedHeight = pageController.currentPageHeight + rowHeight;
+        console.log(`Measured Row Height: ${rowHeight}px`);
 
-        // Check if adding the row would exceed the page height
-        if (accumulatedHeight > pageController.maxPageHeight) {
+        // Check if adding this row exceeds the max page height
+        if (accumulatedHeight + rowHeight > pageController.maxPageHeight) {
+            console.log("Row exceeds max page height. Starting a new page...");
+
+            // Remove the row from the current table
+            tbody.removeChild(row);
+
+            // Finalize the current page
             pageController.startNewPage();
-            tbody = startNewTable(); // Start a new table on the new page
-            accumulatedHeight = rowHeight; // Reset accumulated height to the new row's height
+
+            // Create a new table with header
+            currentTable = createNewTable();
+            await pageController.addContentToPage(currentTable, headerHeight);
+            console.log("Added new table to the new page.");
+
+            // Append the row to the new table
+            const newTbody = currentTable.querySelector('tbody');
+            newTbody.appendChild(row);
+            const newRowHeight = await measureComponentHeight(row);
+            console.log(`Measured Row Height on new page: ${newRowHeight}px`);
+
+            // Update accumulated height
+            accumulatedHeight = headerHeight + newRowHeight;
+        } else {
+            // If it fits, keep the row in the current table
+            accumulatedHeight += rowHeight;
         }
 
-        // Add row to the current page's tbody
-        tbody.appendChild(row);
+        // Update the current page height in PageController
         pageController.currentPageHeight = accumulatedHeight;
-    };
+        console.log(`Added row. New Accumulated Height: ${accumulatedHeight}px`);
+    }
+
+    // Finalize pages after all rows are processed
+    const pages = pageController.finalizePages();
+    console.log(`Total Pages after finalization: ${pages.length}`);
+
+    // Optionally, return pages or perform further actions
+    return pages;
 }

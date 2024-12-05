@@ -1,7 +1,9 @@
+// LoadOrchestrator.js
+
 import { globalState } from '../../reactive/state.js';
 import { fetchReportData } from '../../api/fetchReportData.js';
 import { renderPages } from '../components/pageBuilder.js';
-import PageController from '../controllers/PageController.js';
+import PageController from './PageController.js';
 
 const templateRegistry = new Map();
 
@@ -24,36 +26,39 @@ export class LoadOrchestrator {
     async orchestrateLoad() {
         try {
             console.log("Starting orchestrateLoad...");
-    
+
             // Explicitly check if reportData exists and has content
             let reportData = globalState.getState().reportData;
             if (!reportData || reportData.length === 0) {
                 console.log("No report data found. Fetching new data...");
                 reportData = await this.fetchAndSetReportData();
             }
-    
+
             if (!reportData || reportData.length === 0) {
                 throw new Error("No report data available to load components.");
             }
-    
+
             console.log("Report data available for orchestrating load:", reportData);
-    
+
             const componentOrder = this.templateConfig.components;
             console.log("Component order from template:", componentOrder);
-    
+
             this.pageController = new PageController();
+            await this.pageController.initialize(); // Initialize PageController (async)
+            console.log("PageController initialized.");
+
             await this.templateConfig.initializeComponents(this.pageController, componentOrder);
-    
-            const pages = this.pageController.finalizePages()
+            console.log("Components initialized.");
+
+            const pages = this.pageController.finalizePages();
             console.log("Pages finalized:", pages);
+
             renderPages(pages);
         } catch (error) {
             console.error("Error in orchestrateLoad:", error);
         }
     }
-    
               
-
     async refreshReport() {
         try {
             // Use existing report data
@@ -62,18 +67,22 @@ export class LoadOrchestrator {
                 console.error("No report data available for refreshing.");
                 return;
             }
-    
+
             // Reload components and re-render
             const componentOrder = this.templateConfig.components;
             console.log("Refreshing components with order:", componentOrder);
-    
+
             this.pageController = new PageController();
-    
+            await this.pageController.initialize(); // Initialize PageController (async)
+            console.log("PageController initialized for refresh.");
+
             // Await the initialization of components
             await this.templateConfig.initializeComponents(this.pageController, componentOrder);
-    
+            console.log("Components refreshed.");
+
             // Finalize pages after components are initialized
             const pages = this.pageController.finalizePages().filter(page => page.length > 0);
+            console.log("Pages finalized for refresh:", pages);
             renderPages(pages);
         } catch (error) {
             console.error("Error in refreshReport:", error);
@@ -82,7 +91,7 @@ export class LoadOrchestrator {
 
     async fetchAndSetReportData() {
         try {
-            console.log('trying to fetch')
+            console.log('Attempting to fetch report data...');
             const state = globalState.getState();
             const reportType = state.selectedReportType;
             const clientKey = state.clientData?.key;
@@ -90,7 +99,7 @@ export class LoadOrchestrator {
             const reportFilters = this.buildReportFilters();
 
             const reportData = await fetchReportData(reportType, reportFilters, clientKey);
-            console.log('what I fetched: ', reportData)
+            console.log('Fetched report data:', reportData);
             globalState.setState({
                 reportData,
                 dataHold: reportData, // Preserve a master copy

@@ -42,7 +42,6 @@ export function renderPages(pages) {
         const dpi = 96;
         const containerWidth = inchesToPixels(8.5, dpi)
         const { width, height } = getPageDimensions(containerWidth);
-        //const scaleRatio = globalState.getState().scaleRatio;
 
         pages.forEach((page, pageIndex) => {
             const pageContainer = document.createElement('div');
@@ -65,8 +64,7 @@ export function renderPages(pages) {
         // Apply scaling to tables
         const tables = document.querySelectorAll("table.report-table");
         tables.forEach((table, index) => {
-            scaleTableComponent(table, scaleRatio);
-            console.log(`Scaled table ${index + 1} with scale ratio: ${scaleRatio}`);
+            scaleTableComponent(table);
         });
 
         console.log("Rendered pages with footer and adjusted content height.");
