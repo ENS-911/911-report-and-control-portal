@@ -1,24 +1,26 @@
+// singleAgencyType.js
+
 import { globalState } from '../../reactive/state.js';
 
+/**
+ * Creates and returns a DOM element containing a pie chart of battalion types and corresponding labels.
+ * Utilizes Highcharts for chart rendering.
+ * @returns {HTMLElement} - The container DOM element for the battalion types chart and labels.
+ */
 export async function singleAgencyType() {
-    const scaleRatio = globalState.getState().scaleRatio || 1;
     const reportData = globalState.getState().reportData || [];
     const agencyName = reportData.length > 0 ? reportData[0].agency_type : 'Unknown Agency';
-
-    console.log('Scale Ratio in singleAgencyType:', scaleRatio);
 
     // Create container
     const container = document.createElement('div');
     container.className = 'single-agency-type';
-    container.style.display = 'flex';
-    container.style.flexWrap = 'wrap';
-    container.style.justifyContent = 'space-between';
-    container.style.alignItems = 'center';
 
     // Process data for chart and labels
     const battalionCounts = {};
     reportData.forEach((item) => {
-        battalionCounts[item.battalion] = (battalionCounts[item.battalion] || 0) + 1;
+        if (item.battalion) { // Ensure battalion exists
+            battalionCounts[item.battalion] = (battalionCounts[item.battalion] || 0) + 1;
+        }
     });
 
     const totalEvents = Object.values(battalionCounts).reduce((sum, count) => sum + count, 0);
@@ -26,50 +28,44 @@ export async function singleAgencyType() {
     const chartData = Object.entries(battalionCounts).map(([battalion, count]) => ({
         name: battalion,
         y: count,
+        // Removed 'color' to let Highcharts handle color assignments dynamically
     }));
 
     // Handle case when chartData is empty
     if (chartData.length === 0) {
         const noDataMessage = document.createElement('div');
+        noDataMessage.className = 'no-data-message';
         noDataMessage.textContent = 'No data available for the selected agency.';
         container.appendChild(noDataMessage);
         return container; // Return container with no data message
     }
 
-    // Left: Create pie chart container
+    // Create chart container
     const chartContainer = document.createElement('div');
     chartContainer.className = 'pie-chart-container';
-    chartContainer.style.width = `${300 * scaleRatio}px`;
-    chartContainer.style.height = `${300 * scaleRatio}px`;
 
-    // Right: Create label container
+    // Create label container
     const labelContainer = document.createElement('div');
     labelContainer.className = 'label-container';
-    labelContainer.style.width = '50%';
-    labelContainer.style.padding = `${4 * scaleRatio}px`;
 
     // Add title label
     const titleLabel = document.createElement('h3');
     titleLabel.textContent = 'Number of Events for This Report';
-    titleLabel.style.textAlign = 'center';
-    titleLabel.style.fontSize = `${14 * scaleRatio}px`;
+    titleLabel.className = 'label-title';
     labelContainer.appendChild(titleLabel);
 
     // Add battalion names and counts
     chartData.forEach(({ name, y }) => {
         const battalionLabel = document.createElement('div');
-        battalionLabel.style.display = 'flex';
-        battalionLabel.style.justifyContent = 'space-between';
-        battalionLabel.style.borderBottom = `${1 * scaleRatio}px solid #ccc`;
-        battalionLabel.style.padding = `${2 * scaleRatio}px 0`;
+        battalionLabel.className = 'battalion-label';
 
         const battalionName = document.createElement('span');
         battalionName.textContent = name;
-        battalionName.style.fontSize = `${12 * scaleRatio}px`;
+        battalionName.className = 'battalion-name';
 
         const battalionCount = document.createElement('span');
         battalionCount.textContent = y;
-        battalionCount.style.fontSize = `${12 * scaleRatio}px`;
+        battalionCount.className = 'battalion-count';
 
         battalionLabel.appendChild(battalionName);
         battalionLabel.appendChild(battalionCount);
@@ -78,18 +74,15 @@ export async function singleAgencyType() {
 
     // Add total at the bottom
     const totalLabel = document.createElement('div');
-    totalLabel.style.display = 'flex';
-    totalLabel.style.justifyContent = 'space-between';
-    totalLabel.style.fontWeight = 'bold';
-    totalLabel.style.padding = `${4 * scaleRatio}px 0`;
+    totalLabel.className = 'total-label';
 
     const totalText = document.createElement('span');
     totalText.textContent = 'Total';
-    totalText.style.fontSize = `${14 * scaleRatio}px`;
+    totalText.className = 'total-text';
 
     const totalCount = document.createElement('span');
     totalCount.textContent = totalEvents;
-    totalCount.style.fontSize = `${14 * scaleRatio}px`;
+    totalCount.className = 'total-count';
 
     totalLabel.appendChild(totalText);
     totalLabel.appendChild(totalCount);
@@ -116,13 +109,34 @@ export async function singleAgencyType() {
                 title: {
                     text: `Distribution for ${agencyName}`,
                     style: {
-                        fontSize: `${12 * scaleRatio}px`,
+                        fontSize: '12px',
+                    },
+                },
+                accessibility: {
+                    point: {
+                        valueSuffix: ' events',
+                    },
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>',
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                            style: {
+                                fontSize: '12px',
+                            },
+                        },
                     },
                 },
                 series: [
                     {
                         name: 'Events',
-                        colorByPoint: true,
+                        colorByPoint: true, // Let Highcharts assign colors
                         data: chartData,
                     },
                 ],
@@ -131,6 +145,11 @@ export async function singleAgencyType() {
             });
         } catch (error) {
             console.error('Error rendering Highcharts:', error);
+            // Display error message within the chart container
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'chart-error';
+            errorMsg.textContent = 'Failed to render chart.';
+            chartContainer.appendChild(errorMsg);
             // Resolve even if the chart fails to render
             resolve();
         }

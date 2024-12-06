@@ -7,10 +7,19 @@ import PageController from './PageController.js';
 import { createTitleComponent } from '../components/reportTitle.js';
 import { createDivComponent } from '../components/createDivComponent.js';
 import { createTableComponent } from '../components/tableComponent.js';
+import { incidentTypeChart } from '../components/incidentTypeChart.js';
+import { allAgencyTypes } from '../components/allAgencyTypes.js';
 
 const templateRegistry = new Map();
 
+/**
+ * LoadOrchestrator manages the overall process of loading report data and organizing components into pages.
+ */
 export class LoadOrchestrator {
+    /**
+     * Initializes the LoadOrchestrator with a specific template configuration.
+     * @param {string} templateName - The name of the template to use.
+     */
     constructor(templateName) {
         this.templateConfig = templateRegistry.get(templateName);
         if (!this.templateConfig) {
@@ -19,6 +28,11 @@ export class LoadOrchestrator {
         this.pageController = null;
     }
 
+    /**
+     * Registers a new template configuration.
+     * @param {string} name - The name of the template.
+     * @param {object} templateConfig - The configuration object for the template.
+     */
     static registerTemplate(name, templateConfig) {
         if (!name || !templateConfig) {
             throw new Error("Template name and configuration are required for registration.");
@@ -26,6 +40,9 @@ export class LoadOrchestrator {
         templateRegistry.set(name, templateConfig);
     }
 
+    /**
+     * Orchestrates the loading of report components into pages.
+     */
     async orchestrateLoad() {
         try {
             console.log("Starting orchestrateLoad...");
@@ -43,9 +60,11 @@ export class LoadOrchestrator {
 
             console.log("Report data available for orchestrating load:", reportData);
 
-            // Initialize PageController with standard page height
-            const MAX_PAGE_HEIGHT = 1056; // Adjust as per your requirements
-            this.pageController = new PageController(MAX_PAGE_HEIGHT);
+            // Initialize PageController with fixed page height and footer height
+            const MAX_PAGE_HEIGHT = 1056; // Fixed page height
+            const FOOTER_HEIGHT = 50; // Fixed footer height
+            this.pageController = new PageController(MAX_PAGE_HEIGHT, FOOTER_HEIGHT); // Instantiate PageController
+            globalState.setState({ pageController: this.pageController });
             console.log("PageController initialized.");
 
             // Initialize components based on template configuration
@@ -58,56 +77,51 @@ export class LoadOrchestrator {
                     continue; // Skip undefined or empty component names
                 }
 
+                let component = null;
+
                 switch (componentName) {
                     case 'title':
-                        const title = createTitleComponent(component.text);
-                        await this.pageController.addComponent(title);
-                        console.log("Added title component.");
+                        component = createTitleComponent(this.templateConfig.getTitle());
                         break;
                     case 'agencyType':
-                        const agencyTypeHTML = `
-                            <p>All Agency Types Content</p>
-                            <!-- Add more HTML as needed -->
-                        `;
-                        const agencyTypeDiv = createDivComponent('all-agency-types', agencyTypeHTML);
-                        await this.pageController.addComponent(agencyTypeDiv);
-                        console.log("Added agency type component.");
+                        component = await allAgencyTypes(); // Await asynchronous function
                         break;
                     case 'incidentType':
-                        const incidentTypeHTML = `
-                            <p>Incident Type Chart Content</p>
-                            <!-- Add more HTML or embed charts as needed -->
-                        `;
-                        const incidentTypeDiv = createDivComponent('incident-type-chart', incidentTypeHTML);
-                        await this.pageController.addComponent(incidentTypeDiv);
-                        console.log("Added incident type component.");
+                        component = await incidentTypeChart(); // Await asynchronous function
                         break;
                     case 'table':
-                        const table = createTableComponent(reportData);
-                        await this.pageController.addComponent(table);
-                        console.log("Added table component.");
+                        component = await createTableComponent(this.pageController); // Await asynchronous function
                         break;
                     default:
-                        console.warn(`Unknown component type: ${component.type}`);
+                        console.warn(`Unknown component type: ${componentName}`);
+                }
+
+                if (component) {
+                    await this.pageController.addContentToPage(component);
+                    console.log(`Added ${componentName} component.`);
                 }
             }
 
-            // Finalize all pages by adding footers
+            // Finalize all pages by adding footers to pages without them
             if (typeof this.pageController.finalizePages === 'function') {
-                this.pageController.finalizePages();
-                console.log("Pages finalized with footers.");
+                const finalizedPages = this.pageController.finalizePages(); // Now returns pages
+                console.log("Pages finalized with footers:", finalizedPages);
             } else {
                 console.error("finalizePages method is not defined in PageController.");
             }
 
             // Render all pages to the DOM
+            console.log("Rendering pages:", this.pageController.pages);
             renderPages(this.pageController.pages);
             console.log("Rendered all pages.");
         } catch (error) {
             console.error("Error in orchestrateLoad:", error);
         }
     }
-              
+                  
+    /**
+     * Refreshes the report by re-initializing the PageController and re-adding components.
+     */
     async refreshReport() {
         try {
             console.log("Starting refreshReport...");
@@ -120,54 +134,52 @@ export class LoadOrchestrator {
             }
 
             // Initialize a new PageController
-            const MAX_PAGE_HEIGHT = 1056; // Adjust as per your requirements
-            this.pageController = new PageController(MAX_PAGE_HEIGHT);
+            const MAX_PAGE_HEIGHT = 1056; // Fixed page height
+            const FOOTER_HEIGHT = 50; // Fixed footer height
+            this.pageController = new PageController(MAX_PAGE_HEIGHT, FOOTER_HEIGHT);
+            globalState.setState({ pageController: this.pageController });
             console.log("PageController initialized for refresh.");
 
             // Initialize components based on template configuration
             const componentOrder = this.templateConfig.components;
             console.log("Component order from template:", componentOrder);
 
-            for (const component of componentOrder) {
-                switch (component.type) {
+            for (const componentName of componentOrder) {
+                let component = null;
+
+                switch(componentName) { // Switching directly on the string
                     case 'title':
-                        const title = createTitleComponent(component.text);
-                        await this.pageController.addComponent(title);
-                        console.log("Added title component.");
+                        component = createTitleComponent(this.templateConfig.getTitle());
                         break;
                     case 'agencyType':
-                        const agencyTypeHTML = `
-                            <p>All Agency Types Content</p>
-                            <!-- Add more HTML as needed -->
-                        `;
-                        const agencyTypeDiv = createDivComponent('all-agency-types', agencyTypeHTML);
-                        await this.pageController.addComponent(agencyTypeDiv);
-                        console.log("Added agency type component.");
+                        component = await allAgencyTypes();
                         break;
                     case 'incidentType':
-                        const incidentTypeHTML = `
-                            <p>Incident Type Chart Content</p>
-                            <!-- Add more HTML or embed charts as needed -->
-                        `;
-                        const incidentTypeDiv = createDivComponent('incident-type-chart', incidentTypeHTML);
-                        await this.pageController.addComponent(incidentTypeDiv);
-                        console.log("Added incident type component.");
+                        component = await incidentTypeChart();
                         break;
                     case 'table':
-                        const table = createTableComponent(reportData);
-                        await this.pageController.addComponent(table);
-                        console.log("Added table component.");
+                        component = await createTableComponent(this.pageController);
                         break;
                     default:
-                        console.warn(`Unknown component type: ${component.type}`);
+                        console.warn(`Unknown component type: ${componentName}`);
+                }
+
+                if (component) {
+                    await this.pageController.addContentToPage(component);
+                    console.log(`Added ${componentName} component.`);
                 }
             }
 
             // Finalize all pages by adding footers
-            this.pageController.finalizePages();
-            console.log("Pages finalized with footers.");
+            if (typeof this.pageController.finalizePages === 'function') {
+                const finalizedPages = this.pageController.finalizePages(); // Now returns pages
+                console.log("Pages finalized with footers:", finalizedPages);
+            } else {
+                console.error("finalizePages method is not defined in PageController.");
+            }
 
             // Render all pages to the DOM
+            console.log("Rendering pages:", this.pageController.pages);
             renderPages(this.pageController.pages);
             console.log("Refreshed and rendered all pages.");
         } catch (error) {
@@ -175,6 +187,10 @@ export class LoadOrchestrator {
         }
     }    
 
+    /**
+     * Fetches report data and sets it in the global state.
+     * @returns {Array} - The fetched report data.
+     */
     async fetchAndSetReportData() {
         try {
             console.log('Attempting to fetch report data...');
@@ -198,6 +214,10 @@ export class LoadOrchestrator {
         }
     }
 
+    /**
+     * Builds report filters based on user input.
+     * @returns {object} - The report filters.
+     */
     buildReportFilters() {
         const dateRangeSelector = document.getElementById('dateRangeSelector')?.value;
         const filters = {};
@@ -227,3 +247,5 @@ export class LoadOrchestrator {
         return filters;
     }
 }
+
+export default LoadOrchestrator;

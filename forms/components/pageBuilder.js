@@ -35,6 +35,12 @@ function createFooter(pageIndex, totalPages) {
 
 // pageBuilder.js
 
+// renderPages.js
+
+/**
+ * Renders all report pages by appending them to the #contentBody container.
+ * @param {Array<HTMLElement>} pages - The array of report page elements to render.
+ */
 export function renderPages(pages) {
     const reportContainer = document.getElementById('contentBody');
     if (!reportContainer) {
@@ -42,45 +48,18 @@ export function renderPages(pages) {
         return;
     }
 
-    reportContainer.innerHTML = ''; // Clear existing content
+    // Clear existing content
+    reportContainer.innerHTML = '';
 
-    const totalPages = pages.length;
-    console.log(`Total Pages to render: ${totalPages}`);
-
-    pages.forEach((page, pageIndex) => {
-        const pageDiv = document.createElement('div');
-        pageDiv.className = 'page';
-        pageDiv.style.width = '816px'; // 8.5 inches * 96 DPI
-        pageDiv.style.height = '1056px'; // 11 inches * 96 DPI
-        pageDiv.style.position = 'relative';
-        pageDiv.style.marginBottom = '20px'; // Space between pages
-        pageDiv.style.pageBreakAfter = 'always'; // Ensure page breaks in print/PDF
-
-        // Append each content to the page
-        page.forEach((content, contentIndex) => {
-            // Enhanced logging
-            console.log(`Appending content to Page ${pageIndex + 1}, Content ${contentIndex + 1}:`, content, 'Instance of Node:', content instanceof Node);
-
-            if (content instanceof Node) {
-                pageDiv.appendChild(content);
-            } else {
-                console.error(`Content at Page ${pageIndex + 1}, Content ${contentIndex + 1} is not a Node:`, content);
-            }
-        });
-
-        // Append footer to the page
-        const footer = createFooter(pageIndex, totalPages);
-        if (footer instanceof Node) {
-            pageDiv.appendChild(footer);
-            console.log(`Appended footer to Page ${pageIndex + 1}`);
-        } else {
-            console.error(`Footer for Page ${pageIndex + 1} is not a valid Node:`, footer);
-        }
-
-        reportContainer.appendChild(pageDiv);
+    // Append each page to the report container
+    pages.forEach((page, index) => {
+        // Optional: Assign a unique ID or data attribute for each page
+        page.setAttribute('data-page-number', index + 1);
+        reportContainer.appendChild(page);
+        console.log(`Appended Page ${index + 1} to reportContainer.`);
     });
 
-    console.log(`Rendered ${totalPages} pages.`);
+    console.log(`Rendered ${pages.length} pages.`);
 }
 
 export function scaleTableComponent(table, scaleRatio) {

@@ -681,3 +681,173 @@ body {
     font-size: initial !important; /* Reset font size */
     box-sizing: content-box !important;
 }
+
+/* reportStyles.css */
+
+/* Container for all-agency-types */
+.all-agency-types {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    flex-wrap: wrap; /* Allows wrapping on smaller screens */
+}
+
+/* Pie chart container */
+.pie-chart-container {
+    flex: 0 0 300px; /* Fixed width with flexibility */
+    height: 300px;
+    margin-right: 20px;
+}
+
+/* Label container */
+.label-container {
+    flex: 1;
+    padding: 10px;
+    max-width: 500px; /* Limit maximum width for better readability */
+}
+
+/* Title label */
+.label-title {
+    text-align: center;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+/* Agency label */
+.agency-label {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ccc;
+    padding: 5px 0;
+    font-size: 14px;
+}
+
+/* Total label */
+.total-label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    padding: 10px 0;
+    font-size: 16px;
+}
+
+/* Empty data container */
+.all-agency-types.empty {
+    text-align: center;
+    font-size: 16px;
+    color: #666;
+}
+
+/* Chart error message */
+.chart-error {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.incident-type-chart {
+    width: 100%;
+    padding: 10px; /* Fixed padding, adjust as needed */
+    box-sizing: border-box;
+    margin: 20px 0;
+}
+
+/* reportStyles.css */
+
+/* Ensure that report pages have fixed dimensions */
+.report-page {
+    width: 816px; /* 8.5 inches * 96 DPI */
+    height: 1056px; /* 11 inches * 96 DPI */
+    box-sizing: border-box;
+    padding: 20px;
+    margin: 0 auto 20px; /* Center horizontally and add bottom margin */
+    position: relative;
+    background-color: white;
+    border: 1px solid #ccc;
+    overflow: hidden; /* Prevent content from overflowing */
+    page-break-after: always; /* Ensure page breaks in print/PDF */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.report-page .content {
+    flex: 1; /* Take up available space */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: hidden; /* Prevent internal overflow */
+}
+
+/* Styling for the report footer */
+.report-page .page-footer {
+    height: 50px; /* Fixed footer height */
+    border-top: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #555;
+}
+
+.report-page .content > * {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px; /* Space between components */
+}
+
+/* Ensure the report container centers pages */
+#reportContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center pages horizontally */
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+/* Styling for Highcharts containers to ensure they have height */
+.highcharts-container {
+    width: 100%;
+    height: 400px; /* Adjust as needed */
+}
+
+.all-agency-types, .incident-type-chart, .report-title, .report-table {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pie-chart-container, .column-chart-container {
+    width: 100%;
+    height: 400px; /* Ensure fixed height for Highcharts */
+}
+
+/* Additional styling for labels and charts */
+.label-container {
+    margin-top: 20px;
+}
+
+.agency-label, .incident-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.total-label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.label-title {
+    margin-bottom: 10px;
+}
+
+.chart-error {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+}

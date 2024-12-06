@@ -1,26 +1,52 @@
 // PageController.js
 
-import { measureComponentHeight } from '../formUtils/measurementUtils.js';
+import { globalState } from '../../reactive/state.js';
 
+/**
+ * PageController manages the creation and organization of report pages.
+ * It ensures that components are added sequentially without exceeding page limits.
+ */
 class PageController {
-    constructor(maxPageHeight = 1056) { // Default to standard letter height
+    /**
+     * Initializes the PageController with a fixed page size.
+     * @param {number} maxPageHeight - The maximum height of a page in pixels.
+     * @param {number} footerHeight - The height of the footer in pixels.
+     */
+    constructor(maxPageHeight = 1056, footerHeight = 50) {
         this.pages = [];
+        this.maxPageHeight = maxPageHeight; // 1056px
+        this.footerHeight = footerHeight; // 50px
+        this.availableSpace = this.maxPageHeight - this.footerHeight - 40; // 40px padding (20px top + 20px bottom)
         this.currentPage = this.createNewPage();
-        this.maxPageHeight = maxPageHeight; // e.g., 1056px
-        this.footerHeight = 50; // As defined in CSS
     }
 
+    /**
+     * Creates a new report page with content and footer containers.
+     * @returns {HTMLElement} - The newly created report page element.
+     */
     createNewPage() {
         const page = document.createElement('div');
         page.className = 'report-page';
+
+        // Create content container
+        const content = document.createElement('div');
+        content.className = 'content';
+        page.appendChild(content);
+
+        // Create footer container
+        const footer = document.createElement('div');
+        footer.className = 'page-footer';
+        page.appendChild(footer);
+
         this.pages.push(page);
         return page;
     }
 
     /**
-     * Adds a component to the current page. If the component doesn't fit, finalizes the current page with a footer and starts a new page.
+     * Adds a component to the current page. If the component exceeds available space,
+     * finalizes the current page and adds the component to a new page.
      * @param {HTMLElement} component - The DOM element to add.
-     * @param {boolean} isTitle - Indicates if the component is the title (affects positioning or styling if needed).
+     * @param {boolean} isTitle - Indicates if the component is the title (affects styling if needed).
      */
     async addContentToPage(component, isTitle = false) {
         if (!(component instanceof HTMLElement)) {
@@ -28,68 +54,88 @@ class PageController {
             return;
         }
 
-        // Append the component to the current page
-        this.currentPage.appendChild(component);
-        await this.waitForRender(); // Ensure the component is rendered
+        const contentContainer = this.currentPage.querySelector('.content');
+        if (!contentContainer) {
+            console.error("Content container not found in current page.");
+            return;
+        }
 
-        const componentHeight = await measureComponentHeight(component);
+        // Append the component temporarily to measure its height
+        contentContainer.appendChild(component);
+
+        // Wait for the component to render
+        await this.waitForRender();
+
+        // Measure the height of the component
+        const componentHeight = component.getBoundingClientRect().height;
         console.log(`Measured height for component (${component.className || component.tagName}): ${componentHeight}px`);
 
-        const currentPageHeight = this.getPageHeight(this.currentPage);
-        console.log(`Current page height after adding component: ${currentPageHeight}px`);
+        // Calculate current content height
+        const currentContentHeight = contentContainer.scrollHeight;
+        console.log(`Current content height after adding component: ${currentContentHeight}px`);
 
-        if (currentPageHeight > this.maxPageHeight - this.footerHeight) {
-            console.log(`Component height (${componentHeight}px) exceeds available space. Finalizing current page.`);
+        if (currentContentHeight > this.availableSpace) {
+            console.log(`Component height (${componentHeight}px) exceeds available space (${this.availableSpace}px). Finalizing current page.`);
+
             // Remove the component that caused overflow
-            this.currentPage.removeChild(component);
-            // Finalize the current page with a footer
+            contentContainer.removeChild(component);
+
+            // Add footer to current page
             this.addFooter(this.pages.length);
-            // Start a new page and add the component there
+
+            // Create a new page
             this.currentPage = this.createNewPage();
-            this.currentPage.appendChild(component);
+            const newPageNumber = this.pages.length;
+
+            // Add the component to the new page
+            const newContentContainer = this.currentPage.querySelector('.content');
+            if (!newContentContainer) {
+                console.error("Content container not found in new page.");
+                return;
+            }
+
+            newContentContainer.appendChild(component);
+
+            // Wait for the component to render
             await this.waitForRender();
-            const newComponentHeight = await measureComponentHeight(component);
+
+            // Re-measure the component's height in the new page
+            const newComponentHeight = component.getBoundingClientRect().height;
             console.log(`Measured height for component on new page: ${newComponentHeight}px`);
+
+            // Update current content height
+            const newPageContentHeight = newContentContainer.scrollHeight;
+            console.log(`New page content height after adding component: ${newPageContentHeight}px`);
+
+            if (newPageContentHeight > this.availableSpace) {
+                console.warn(`Component height (${newComponentHeight}px) exceeds available space on the new page (${this.availableSpace}px). Consider splitting the component.`);
+                // Optionally handle oversized components here, e.g., split tables across pages
+            } else {
+                console.log(`Added component to new page (${newPageNumber}).`);
+            }
+        } else {
+            console.log(`Added component to current page (${this.pages.length}).`);
         }
     }
 
     /**
      * Adds a footer to the specified page.
-     * @param {number} pageNumber - The page number (1-based index).
+     * @param {number} pageNumber - The current page number (1-based index).
      */
     addFooter(pageNumber) {
-        const footer = this.createFooter(pageNumber, this.pages.length);
-        this.currentPage.appendChild(footer);
-    }
-
-    /**
-     * Finalizes all pages by adding footers to pages without them.
-     */
-    finalizePages() {
-        this.pages.forEach((page, index) => {
-            const hasFooter = page.querySelector('.page-footer');
-            if (!hasFooter) {
-                this.addFooter(index + 1);
-            }
-        });
-    }
-
-    /**
-     * Creates a footer element.
-     * @param {number} pageNumber - The current page number.
-     * @param {number} totalPages - The total number of pages.
-     * @returns {HTMLElement} - The footer DOM element.
-     */
-    createFooter(pageNumber, totalPages) {
-        const footer = document.createElement('footer');
-        footer.className = 'page-footer';
+        const footer = this.currentPage.querySelector('.page-footer');
+        if (!footer) {
+            console.error("Footer container not found in current page.");
+            return;
+        }
 
         const leftSection = document.createElement('div');
         leftSection.className = 'footer-left';
+
         const formattedDateTime = new Date().toLocaleString();
         leftSection.innerHTML = `
             <p>Report Generated: ${formattedDateTime}</p>
-            <p>Page ${pageNumber} of ${totalPages}</p>
+            <p>Page ${pageNumber} of ${this.pages.length}</p>
         `;
 
         const centerSection = document.createElement('div');
@@ -104,28 +150,38 @@ class PageController {
             <p>Created With: 911 Emerge-N-See Report Generator</p>
         `;
 
+        // Clear existing footer content and append new sections
+        footer.innerHTML = '';
         footer.appendChild(leftSection);
         footer.appendChild(centerSection);
         footer.appendChild(rightSection);
-
-        return footer;
     }
 
     /**
-     * Gets the current height of a page.
-     * @param {HTMLElement} page - The page DOM element.
-     * @returns {number} - The height in pixels.
+     * Finalizes all pages by adding footers to pages without them.
+     * @returns {Array<HTMLElement>} - The array of finalized pages.
      */
-    getPageHeight(page) {
-        return page.scrollHeight;
+    finalizePages() {
+        this.pages.forEach((page, index) => {
+            const footer = page.querySelector('.page-footer');
+            const hasFooter = footer && footer.innerHTML.trim() !== '';
+            if (!hasFooter) {
+                this.addFooter(index + 1);
+            }
+        });
+        return this.pages; // Return the pages array
     }
 
     /**
      * Waits for the next animation frame to ensure rendering is complete.
-     * @returns {Promise} - Resolves on the next animation frame.
+     * @returns {Promise} - Resolves after one animation frame.
      */
     waitForRender() {
-        return new Promise(resolve => requestAnimationFrame(resolve));
+        return new Promise(resolve => {
+            requestAnimationFrame(() => {
+                resolve();
+            });
+        });
     }
 }
 

@@ -1,5 +1,7 @@
 // createTableComponent.js
 
+import { globalState } from "../../reactive/state.js";
+
 export async function createTableComponent(pageController) {
     const reportData = globalState.getState().reportData || [];
     const table = document.createElement('table');

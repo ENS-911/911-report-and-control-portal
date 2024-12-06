@@ -1,32 +1,9 @@
 // formUtils/measurementUtils.js
-import { globalState } from '../../reactive/state.js';
 
-const measurementArea = document.getElementById('reportMeasurementArea');
-
-export async function measureComponentHeight(element) {
-    return new Promise((resolve, reject) => {
-        if (!(element instanceof HTMLElement)) {
-            console.error('Invalid element provided for measurement:', element);
-            return resolve(0); // Fallback to 0 height
-        }
-
-        // Clone the element to avoid modifying the original
-        const clonedElement = element.cloneNode(true);
-        clonedElement.style.margin = '0'; // Reset margins to avoid unexpected height
-        measurementArea.appendChild(clonedElement);
-
-        // Allow the browser to render the cloned element
-        requestAnimationFrame(() => {
-            const height = clonedElement.getBoundingClientRect().height;
-            measurementArea.removeChild(clonedElement);
-
-            if (isNaN(height)) {
-                console.error('Measured height is NaN for element:', element);
-                resolve(0); // Fallback to 0 height
-            } else {
-                resolve(Math.ceil(height)); // Round up to the nearest integer
-            }
-        });
+export function measureComponentHeight(component) {
+    return new Promise((resolve) => {
+        const rect = component.getBoundingClientRect();
+        resolve(rect.height);
     });
 }
 
