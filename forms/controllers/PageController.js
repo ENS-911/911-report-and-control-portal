@@ -1,6 +1,6 @@
 // PageController.js
 
-import { globalState } from '../../reactive/state.js';
+import { globalState } from '../reactive/state.js';
 
 /**
  * PageController manages the creation and organization of report pages.
@@ -17,6 +17,7 @@ class PageController {
         this.maxPageHeight = maxPageHeight; // 1056px
         this.footerHeight = footerHeight; // 50px
         this.availableSpace = this.maxPageHeight - this.footerHeight - 40; // 40px padding (20px top + 20px bottom)
+        this.sizeOnPage = 0; // Tracks cumulative height on the current page
         this.currentPage = this.createNewPage();
     }
 
@@ -46,7 +47,7 @@ class PageController {
      * Adds a component to the current page. If the component exceeds available space,
      * finalizes the current page and adds the component to a new page.
      * @param {HTMLElement} component - The DOM element to add.
-     * @param {boolean} isTitle - Indicates if the component is the title (affects styling if needed).
+     * @param {boolean} isTitle - Indicates if the component is the title.
      */
     async addContentToPage(component, isTitle = false) {
         if (!(component instanceof HTMLElement)) {
@@ -60,23 +61,24 @@ class PageController {
             return;
         }
 
-        // Append the component temporarily to measure its height
+        // Append the component to the content container
         contentContainer.appendChild(component);
+        console.log(`Added component to current page (${this.pages.length}).`);
 
-        // Wait for the component to render
+        // Wait for the browser to render the component
         await this.waitForRender();
 
         // Measure the height of the component
         const componentHeight = component.getBoundingClientRect().height;
         console.log(`Measured height for component (${component.className || component.tagName}): ${componentHeight}px`);
 
-        // Calculate current content height
-        const currentContentHeight = contentContainer.scrollHeight;
-        console.log(`Current content height after adding component: ${currentContentHeight}px`);
+        // Update cumulative height
+        this.sizeOnPage += componentHeight;
+        console.log(`Current content height after adding component: ${this.sizeOnPage}px`);
 
-        if (currentContentHeight > this.availableSpace) {
-            console.log(`Component height (${componentHeight}px) exceeds available space (${this.availableSpace}px). Finalizing current page.`);
-
+        // Check if exceeding page size
+        if (this.sizeOnPage >= this.availableSpace) {
+            console.log(`Page size exceeded. Finalizing current page and creating a new one.`);
             // Remove the component that caused overflow
             contentContainer.removeChild(component);
 
@@ -85,7 +87,7 @@ class PageController {
 
             // Create a new page
             this.currentPage = this.createNewPage();
-            const newPageNumber = this.pages.length;
+            this.sizeOnPage = 0; // Reset for the new page
 
             // Add the component to the new page
             const newContentContainer = this.currentPage.querySelector('.content');
@@ -95,8 +97,9 @@ class PageController {
             }
 
             newContentContainer.appendChild(component);
+            console.log(`Added component to new page (${this.pages.length}).`);
 
-            // Wait for the component to render
+            // Wait for the browser to render the component
             await this.waitForRender();
 
             // Re-measure the component's height in the new page
@@ -104,17 +107,13 @@ class PageController {
             console.log(`Measured height for component on new page: ${newComponentHeight}px`);
 
             // Update current content height
-            const newPageContentHeight = newContentContainer.scrollHeight;
-            console.log(`New page content height after adding component: ${newPageContentHeight}px`);
+            this.sizeOnPage += newComponentHeight;
+            console.log(`New page content height after adding component: ${this.sizeOnPage}px`);
 
-            if (newPageContentHeight > this.availableSpace) {
+            if (newComponentHeight > this.availableSpace) {
                 console.warn(`Component height (${newComponentHeight}px) exceeds available space on the new page (${this.availableSpace}px). Consider splitting the component.`);
                 // Optionally handle oversized components here, e.g., split tables across pages
-            } else {
-                console.log(`Added component to new page (${newPageNumber}).`);
             }
-        } else {
-            console.log(`Added component to current page (${this.pages.length}).`);
         }
     }
 
