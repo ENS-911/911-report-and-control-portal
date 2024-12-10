@@ -1,6 +1,6 @@
 // PageController.js
 
-import { globalState } from '../reactive/state.js';
+import { globalState } from '../../reactive/state.js';
 
 /**
  * PageController manages the creation and organization of report pages.
@@ -44,78 +44,58 @@ class PageController {
     }
 
     /**
-     * Adds a component to the current page. If the component exceeds available space,
-     * finalizes the current page and adds the component to a new page.
-     * @param {HTMLElement} component - The DOM element to add.
-     * @param {boolean} isTitle - Indicates if the component is the title.
-     */
-    async addContentToPage(component, isTitle = false) {
-        if (!(component instanceof HTMLElement)) {
-            console.error('Invalid component type:', component);
-            return;
-        }
-
-        const contentContainer = this.currentPage.querySelector('.content');
-        if (!contentContainer) {
-            console.error("Content container not found in current page.");
-            return;
-        }
-
-        // Append the component to the content container
-        contentContainer.appendChild(component);
-        console.log(`Added component to current page (${this.pages.length}).`);
-
-        // Wait for the browser to render the component
-        await this.waitForRender();
-
-        // Measure the height of the component
-        const componentHeight = component.getBoundingClientRect().height;
-        console.log(`Measured height for component (${component.className || component.tagName}): ${componentHeight}px`);
-
-        // Update cumulative height
-        this.sizeOnPage += componentHeight;
-        console.log(`Current content height after adding component: ${this.sizeOnPage}px`);
-
-        // Check if exceeding page size
-        if (this.sizeOnPage >= this.availableSpace) {
-            console.log(`Page size exceeded. Finalizing current page and creating a new one.`);
-            // Remove the component that caused overflow
-            contentContainer.removeChild(component);
-
-            // Add footer to current page
-            this.addFooter(this.pages.length);
-
-            // Create a new page
-            this.currentPage = this.createNewPage();
-            this.sizeOnPage = 0; // Reset for the new page
-
-            // Add the component to the new page
-            const newContentContainer = this.currentPage.querySelector('.content');
-            if (!newContentContainer) {
-                console.error("Content container not found in new page.");
-                return;
-            }
-
-            newContentContainer.appendChild(component);
-            console.log(`Added component to new page (${this.pages.length}).`);
-
-            // Wait for the browser to render the component
-            await this.waitForRender();
-
-            // Re-measure the component's height in the new page
-            const newComponentHeight = component.getBoundingClientRect().height;
-            console.log(`Measured height for component on new page: ${newComponentHeight}px`);
-
-            // Update current content height
-            this.sizeOnPage += newComponentHeight;
-            console.log(`New page content height after adding component: ${this.sizeOnPage}px`);
-
-            if (newComponentHeight > this.availableSpace) {
-                console.warn(`Component height (${newComponentHeight}px) exceeds available space on the new page (${this.availableSpace}px). Consider splitting the component.`);
-                // Optionally handle oversized components here, e.g., split tables across pages
-            }
-        }
+ * Adds a component to the current page and measures its height accurately.
+ * @param {HTMLElement} component - The DOM element to add.
+ * @param {boolean} isTitle - Indicates if the component is the title.
+ */
+async addContentToPage(component, isTitle = false) {
+    if (!(component instanceof HTMLElement)) {
+        console.error('Invalid component type:', component);
+        return;
     }
+
+    const contentContainer = this.currentPage.querySelector('.content');
+    if (!contentContainer) {
+        console.error("Content container not found in current page.");
+        return;
+    }
+
+    // Append the component to the content container
+    contentContainer.appendChild(component);
+    console.log(`Added component to current page (${this.pages.length}).`);
+
+    // Wait for the browser to render the component
+    await this.waitForRender();
+
+    // Measure the height
+    const componentHeight = component.getBoundingClientRect().height;
+    console.log(`Measured height for component (${component.className || component.tagName}): ${componentHeight}px`);
+
+    // Update cumulative height
+    this.sizeOnPage += componentHeight;
+    console.log(`Current content height after adding component: ${this.sizeOnPage}px`);
+
+    // Check if exceeding page size
+    if (this.sizeOnPage >= this.availableSpace) {
+        console.log(`Page size exceeded. Finalizing current page and creating a new one.`);
+        this.addFooter(this.pages.length);
+        this.currentPage = this.createNewPage();
+        this.sizeOnPage = 0; // Reset for the new page
+    }
+}
+
+/**
+ * Waits for the next animation frame to ensure rendering is complete.
+ * @returns {Promise} - Resolves after one animation frame.
+ */
+waitForRender() {
+    return new Promise(resolve => {
+        requestAnimationFrame(() => {
+            resolve();
+        });
+    });
+}
+
 
     /**
      * Adds a footer to the specified page.

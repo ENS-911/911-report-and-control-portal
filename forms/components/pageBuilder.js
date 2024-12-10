@@ -1,5 +1,4 @@
 // pageBuilder.js
-import { getPageDimensions } from '../formUtils/dpiUtils.js';
 import { globalState } from '../../reactive/state.js';
 
 function createFooter(pageIndex, totalPages) {
@@ -32,10 +31,6 @@ function createFooter(pageIndex, totalPages) {
 
     return footer;
 }
-
-// pageBuilder.js
-
-// renderPages.js
 
 /**
  * Renders all report pages by appending them to the #contentBody container.
