@@ -434,14 +434,6 @@ tr, td, th {
     font-size: 12px;
 }
 
-/* Table Styles */
-.report-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    page-break-inside: auto;
-}
-
 .report-table tr {
     page-break-inside: avoid;
     page-break-after: auto;
@@ -606,9 +598,8 @@ body {
 }
 
 .report-table {
-    table-layout: fixed; /* Ensures columns adjust proportionally */
-    width: 100%; /* Makes table span the full parent container */
-    border-collapse: collapse; /* Optional: for cleaner border styling */
+    border-collapse: collapse;
+    page-break-inside: auto;
 }
 
 .report-table tr {
@@ -622,12 +613,6 @@ body {
     white-space: nowrap; /* Prevent text wrapping */
     width: auto;
     max-width: 35%;
-}
-
-.all-agency-types {
-    width: 100%;
-    text-align: center;
-    border-bottom: 2px solid black;
 }
 
 .all-agency-types-title {
@@ -689,22 +674,12 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 20px 0;
-    flex-wrap: wrap; /* Allows wrapping on smaller screens */
-}
-
-/* Pie chart container */
-.pie-chart-container {
-    flex: 0 0 300px; /* Fixed width with flexibility */
-    height: 300px;
-    margin-right: 20px;
 }
 
 /* Label container */
 .label-container {
-    flex: 1;
     padding: 10px;
-    max-width: 500px; /* Limit maximum width for better readability */
+    width: 50%;
 }
 
 /* Title label */
@@ -751,7 +726,6 @@ body {
     width: 100%;
     padding: 10px; /* Fixed padding, adjust as needed */
     box-sizing: border-box;
-    margin: 20px 0;
 }
 
 /* reportStyles.css */
@@ -795,7 +769,6 @@ body {
 .report-page .content > * {
     width: 100%;
     box-sizing: border-box;
-    margin-bottom: 10px; /* Space between components */
 }
 
 /* Ensure the report container centers pages */
@@ -813,20 +786,8 @@ body {
     height: 400px; /* Adjust as needed */
 }
 
-.all-agency-types, .incident-type-chart, .report-title, .report-table {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-}
-
 .pie-chart-container, .column-chart-container {
-    width: 100%;
-    height: 400px; /* Ensure fixed height for Highcharts */
-}
-
-/* Additional styling for labels and charts */
-.label-container {
-    margin-top: 20px;
+    width: 50%;
 }
 
 .agency-label, .incident-label {
@@ -850,4 +811,8 @@ body {
     color: red;
     font-size: 14px;
     text-align: center;
+}
+
+button.highcharts-a11y-proxy-element {
+    display: none;
 }

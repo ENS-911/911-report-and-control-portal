@@ -18,7 +18,15 @@ const agencyReportForm = {
         return state.reportTitle || "Agency Report";
     },
 
+    /**
+     * Initializes all components in the specified order.
+     * @param {PageController} pageController - The controller to manage page content.
+     * @param {Array<string>} componentOrder - The order of components to initialize.
+     */
     async initializeComponents(pageController, componentOrder) {
+        // Clear existing content before initializing
+        pageController.clearContent();
+
         const components = {
             title: async () => {
                 const titleText = this.getTitle();
@@ -29,21 +37,27 @@ const agencyReportForm = {
                 const reportData = globalState.getState().reportData || [];
                 const agencyTypes = [...new Set(reportData.map(item => item.agency_type))];
                 let agencyTypeComponent;
-            
+
                 if (agencyTypes.length > 1) {
-                    agencyTypeComponent = await allAgencyTypes(); // Ensure this function returns a Node
+                    agencyTypeComponent = await allAgencyTypes(); // Should return a Node
+                } else if (agencyTypes.length === 1) {
+                    agencyTypeComponent = await singleAgencyType(agencyTypes[0]); // Pass the single agency type
                 } else {
-                    agencyTypeComponent = await singleAgencyType(); // This should now return a Node
+                    console.warn('No agency data available.');
+                    // Optionally, display a message indicating no data
+                    agencyTypeComponent = document.createElement('div');
+                    agencyTypeComponent.id = 'no-data-component';
+                    agencyTypeComponent.innerHTML = `<p>No agency data available.</p>`;
                 }
-            
+
                 // Check if agencyTypeComponent is a valid Node
                 if (!agencyTypeComponent || !(agencyTypeComponent instanceof Node)) {
                     console.error('agencyTypeComponent is not a valid DOM Node:', agencyTypeComponent);
                     return; // Skip adding this component to the page
                 }
-            
+
                 await pageController.addContentToPage(agencyTypeComponent);
-            },
+            },  
             incidentType: async () => {
                 const incidentTypeComponent = incidentTypeChart();
                 if (!incidentTypeComponent || !(incidentTypeComponent instanceof Node)) {
@@ -53,7 +67,9 @@ const agencyReportForm = {
                 await pageController.addContentToPage(incidentTypeComponent);
             },
             table: async () => {
-                await createTableComponent(pageController);
+                const tableData = globalState.getState().reportData || [];
+                console.log('Table Data: ', tableData);
+                await createTableComponent(pageController, tableData);
             },
         };
 
@@ -72,7 +88,7 @@ const agencyReportForm = {
 LoadOrchestrator.registerTemplate('agencyReport', agencyReportForm);
 
 // Additional utility functions
-export function loadReportComponents() {
+export function loadReportComponents(pageController) {
     const menuContent = document.getElementById('menuContent');
 
     if (!menuContent.querySelector('#reportDateRangeSelector')) {
@@ -81,25 +97,25 @@ export function loadReportComponents() {
 
         const fetchButton = dateRangeSelector.querySelector('#fetchReportData');
         console.log("Attaching handleFetchData to Fetch Data button:", fetchButton);
-        fetchButton.addEventListener('click', handleFetchData);
+        fetchButton.addEventListener('click', () => handleFetchData(pageController));
     }
 }
 
-async function handleFetchData() {
+async function handleFetchData(pageController) {
     const reportType = globalState.getState().selectedReportType;
 
     try {
         console.log("Instantiating LoadOrchestrator for reportType:", reportType);
-        const orchestrator = new LoadOrchestrator(reportType);
+        const orchestrator = new LoadOrchestrator(reportType, pageController);
         await orchestrator.orchestrateLoad();
         console.log("LoadOrchestrator orchestrateLoad completed.");
     } catch (error) {
         console.error("Error fetching report data:", error);
     }
-    setupAgencyFilterControls();
+    setupAgencyFilterControls(pageController);
 }
 
-function setupAgencyFilterControls() {
+function setupAgencyFilterControls(pageController) {
     const menuContent = document.getElementById('menuContent');
 
     // Remove existing controls if they already exist
@@ -126,7 +142,7 @@ function setupAgencyFilterControls() {
     dropdown.appendChild(allOption);
 
     // Populate dropdown with unique agency types
-    const dataHold = globalState.getState().dataHold;
+    const dataHold = globalState.getState().mainData || []; // Ensure 'mainData' is correctly set
     const uniqueAgencyTypes = [...new Set(dataHold.map((item) => item.agency_type))];
 
     uniqueAgencyTypes.forEach((agencyType) => {
@@ -146,12 +162,12 @@ function setupAgencyFilterControls() {
     editButton.textContent = 'Apply Filter';
     menuContent.appendChild(editButton);
 
-    editButton.addEventListener('click', handleApplyFilter);
+    editButton.addEventListener('click', () => handleApplyFilter(pageController));
 }
 
-async function handleApplyFilter() {
+async function handleApplyFilter(pageController) {
     const selectedAgency = document.getElementById('agencyFilter').value;
-    const dataHold = globalState.getState().dataHold || [];
+    const dataHold = globalState.getState().mainData || [];
     const filteredData =
         selectedAgency === 'All'
             ? dataHold
@@ -160,7 +176,7 @@ async function handleApplyFilter() {
     globalState.setState({ reportData: filteredData });
     console.log("Filtered report data:", filteredData);
 
-    const orchestrator = new LoadOrchestrator(globalState.getState().selectedReportType);
+    const orchestrator = new LoadOrchestrator(globalState.getState().selectedReportType, pageController);
     orchestrator.refreshReport(); // Use refresh instead of orchestrateLoad
 }
 

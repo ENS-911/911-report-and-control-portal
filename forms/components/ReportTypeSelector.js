@@ -1,7 +1,5 @@
 // reportComponents/ReportTypeSelector.js
 
-import { globalState } from '../../reactive/state.js';
-
 export function ReportTypeSelector() {
     const container = document.createElement('div');
     container.id = "reportTypeSelector";
@@ -21,14 +19,6 @@ export function ReportTypeSelector() {
             <option value="unitNumberReport">Unit # Report</option>
         </select>
     `;
-
-    // Handle changes within the component itself
-    container.querySelector('#reportTypeSelector').addEventListener('change', (e) => {
-        const reportType = e.target.value;
-        globalState.setState({ selectedReportType: reportType });
-        console.log(`Report type selected: ${reportType}`);
-        // Additional logic for selecting report type can be modularized and managed here
-    });
 
     return container;
 }

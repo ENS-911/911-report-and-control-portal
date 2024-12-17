@@ -5,10 +5,9 @@ import { fetchReportData } from '../../api/fetchReportData.js';
 import { renderPages } from '../components/pageBuilder.js';
 import PageController from './PageController.js';
 import { createTitleComponent } from '../components/reportTitle.js';
-import { createDivComponent } from '../components/createDivComponent.js';
+import { allAgencyTypes } from '../components/allAgencyTypes.js';
 import { createTableComponent } from '../components/tableComponent.js';
 import { incidentTypeChart } from '../components/incidentTypeChart.js';
-import { allAgencyTypes } from '../components/allAgencyTypes.js';
 
 const templateRegistry = new Map();
 
