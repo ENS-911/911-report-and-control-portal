@@ -1,19 +1,20 @@
 // agencyReportForm.js
 
-import { DateRangeSelector } from '../forms/components/DateRangeSelector.js';
+import { fetchReportData } from '../api/fetchReportData.js'; // Adjust the path as needed
 import { globalState } from '../reactive/state.js';
+import { DateRangeSelector } from '../forms/components/DateRangeSelector.js';
 import { createTitleComponent } from '../forms/components/reportTitle.js';
 import { createTableComponent } from '../forms/components/tableComponent.js';
 import { allAgencyTypes } from '../forms/components/allAgencyTypes.js';
 import { singleAgencyType } from '../forms/components/singleAgencyType.js';
-import { LoadOrchestrator } from '../forms/controllers/LoadOrchestrator.js';
 import { incidentTypeChart } from '../forms/components/incidentTypeChart.js';
+import LoadOrchestrator from './controllers/LoadOrchestrator.js'; // Ensure correct path
 
 const agencyReportForm = {
     name: "Agency Report",
     components: ['title', 'agencyType', 'incidentType', 'table'], // Added 'incidentType'
 
-    getTitle: function () { // Changed to regular function to use 'this'
+    getTitle: function () {
         const state = globalState.getState();
         return state.reportTitle || "Agency Report";
     },
@@ -21,11 +22,18 @@ const agencyReportForm = {
     /**
      * Initializes all components in the specified order.
      * @param {PageController} pageController - The controller to manage page content.
-     * @param {Array<string>} componentOrder - The order of components to initialize.
      */
-    async initializeComponents(pageController, componentOrder) {
+    async initializeComponents(pageController) {
+        console.log('Initializing all components with data:', globalState.getState().reportData);
+        if (!pageController) {
+            console.error('PageController is undefined in initializeComponents.');
+            return;
+        }
+
         // Clear existing content before initializing
         pageController.clearContent();
+
+        const data = globalState.getState().reportData;
 
         const components = {
             title: async () => {
@@ -34,8 +42,7 @@ const agencyReportForm = {
                 await pageController.addContentToPage(titleComponent, true);
             },
             agencyType: async () => {
-                const reportData = globalState.getState().reportData || [];
-                const agencyTypes = [...new Set(reportData.map(item => item.agency_type))];
+                const agencyTypes = [...new Set(data.map(item => item.agency_type))];
                 let agencyTypeComponent;
 
                 if (agencyTypes.length > 1) {
@@ -57,7 +64,7 @@ const agencyReportForm = {
                 }
 
                 await pageController.addContentToPage(agencyTypeComponent);
-            },  
+            },
             incidentType: async () => {
                 const incidentTypeComponent = incidentTypeChart();
                 if (!incidentTypeComponent || !(incidentTypeComponent instanceof Node)) {
@@ -67,13 +74,17 @@ const agencyReportForm = {
                 await pageController.addContentToPage(incidentTypeComponent);
             },
             table: async () => {
-                const tableData = globalState.getState().reportData || [];
-                console.log('Table Data: ', tableData);
-                await createTableComponent(pageController, tableData);
+                console.log('Table Data: ', data);
+                const tableComponent = await createTableComponent(pageController, data); // Pass `data`
+                if (!tableComponent || !(tableComponent instanceof Node)) {
+                    console.error('tableComponent is not a valid DOM Node:', tableComponent);
+                    return;
+                }
+                await pageController.addContentToPage(tableComponent);
             },
         };
 
-        for (const componentName of componentOrder) {
+        for (const componentName of this.components) {
             if (components[componentName]) {
                 console.log(`Initializing component: ${componentName}`);
                 await components[componentName](); // Properly await the async function
@@ -92,41 +103,107 @@ export function loadReportComponents(pageController) {
     const menuContent = document.getElementById('menuContent');
 
     if (!menuContent.querySelector('#reportDateRangeSelector')) {
-        const dateRangeSelector = DateRangeSelector(onDateRangeSelect);
+        const dateRangeSelector = DateRangeSelector(onRangeSelect);
         menuContent.appendChild(dateRangeSelector);
-
-        const fetchButton = dateRangeSelector.querySelector('#fetchReportData');
-        console.log("Attaching handleFetchData to Fetch Data button:", fetchButton);
-        fetchButton.addEventListener('click', () => handleFetchData(pageController));
     }
 }
 
-async function handleFetchData(pageController) {
-    const reportType = globalState.getState().selectedReportType;
-
+/**
+ * Callback function to handle range selection and data fetching
+ * @param {string} selectedRange 
+ * @param {Object} customData 
+ */
+async function onRangeSelect(selectedRange, customData) {
+    const fetchButton = document.getElementById('fetchReportData');
+    fetchButton.disabled = true; // Disable the button to prevent multiple clicks
     try {
-        console.log("Instantiating LoadOrchestrator for reportType:", reportType);
-        const orchestrator = new LoadOrchestrator(reportType, pageController);
-        await orchestrator.orchestrateLoad();
-        console.log("LoadOrchestrator orchestrateLoad completed.");
+        console.log(`Selected Range: ${selectedRange}`, customData);
+        displayLoadingMessage(); // Show loading indicator
+
+        const reportFilters = {
+            dateRange: selectedRange,
+            ...customData,
+        };
+
+        // Validate user inputs if necessary
+        // e.g., validateCustomData(selectedRange, customData);
+
+        // Update globalState to signal that data fetching should occur
+        globalState.setState({
+            reportFilters, // Store the filters
+        });
+
+        // Instantiate LoadOrchestrator if not already instantiated
+        const pageController = globalState.getState().pageController;
+        if (!pageController) {
+            console.error('PageController is not set in globalState.');
+            throw new Error('PageController is not initialized.');
+        }
+        const orchestrator = new LoadOrchestrator('agencyReport', pageController);
+        await orchestrator.orchestrateLoad(); // Orchestrate the loading process
+
+        removeLoadingMessage(); // Remove loading indicator after data is loaded
+
     } catch (error) {
-        console.error("Error fetching report data:", error);
+        console.error('Error in onRangeSelect:', error);
+        displayErrorMessage(error);
+        removeLoadingMessage(); // Remove loading indicator on error
+    } finally {
+        fetchButton.disabled = false; // Re-enable the button
     }
-    setupAgencyFilterControls(pageController);
 }
 
-function setupAgencyFilterControls(pageController) {
+/**
+ * Renders the report based on globalState.reportData
+ */
+function renderReport() {
+    console.log('Rendering report with data:', globalState.getState().reportData);
+    const pageController = globalState.getState().pageController;
+    if (!pageController) {
+        console.error('PageController is not available for rendering.');
+        return;
+    }
+    pageController.clearContent(); // Clear existing report
+
+    // Instantiate LoadOrchestrator with the correct template and PageController
+    const orchestrator = new LoadOrchestrator('agencyReport', pageController);
+    orchestrator.orchestrateLoad(); // Orchestrate the loading process
+}
+
+/**
+ * Handles the "Apply Filter" button click
+ */
+async function handleApplyFilter() {
+    const selectedAgency = getSelectedAgency(); // Implement this function to retrieve selected agency
+    const dataHold = globalState.getState().mainData || [];
+    const filteredData =
+        selectedAgency === 'All'
+            ? [...dataHold]
+            : dataHold.filter((item) => item.agency_type === selectedAgency);
+
+    if (filteredData.length > 0) {
+        globalState.setState({ reportData: [...filteredData] }); // Shallow copy
+        console.log("Filtered report data:", filteredData);
+        renderReport(); // Directly render with filtered data
+    } else {
+        console.warn('No data matches the selected filter.');
+        displayNoFilteredDataMessage(); // Implement this function to inform the user
+    }
+}
+
+/**
+ * Sets up the agency filter controls after report rendering
+ */
+function setupAgencyFilterControls() {
     const menuContent = document.getElementById('menuContent');
 
-    // Remove existing controls if they already exist
-    const existingDropdown = menuContent.querySelector('#agencyFilterDropdown');
-    const existingButton = menuContent.querySelector('#editReportButton');
-    if (existingDropdown) existingDropdown.remove();
-    if (existingButton) existingButton.remove();
+    // Remove existing filter controls if any
+    const existingFilter = menuContent.querySelector('#agencyFilterControls');
+    if (existingFilter) existingFilter.remove();
 
-    // Add filter dropdown
-    const dropdownContainer = document.createElement('div');
-    dropdownContainer.id = 'agencyFilterDropdown';
+    // Create filter controls
+    const filterContainer = document.createElement('div');
+    filterContainer.id = 'agencyFilterControls';
 
     const dropdownLabel = document.createElement('label');
     dropdownLabel.textContent = 'Filter by Agency:';
@@ -134,16 +211,11 @@ function setupAgencyFilterControls(pageController) {
 
     const dropdown = document.createElement('select');
     dropdown.id = 'agencyFilter';
-
-    // Add "All" option
-    const allOption = document.createElement('option');
-    allOption.value = 'All';
-    allOption.textContent = 'All';
-    dropdown.appendChild(allOption);
+    dropdown.innerHTML = `<option value="All">All</option>`; // Add "All" option
 
     // Populate dropdown with unique agency types
-    const dataHold = globalState.getState().mainData || []; // Ensure 'mainData' is correctly set
-    const uniqueAgencyTypes = [...new Set(dataHold.map((item) => item.agency_type))];
+    const reportData = globalState.getState().reportData || [];
+    const uniqueAgencyTypes = [...new Set(reportData.map(item => item.agency_type))];
 
     uniqueAgencyTypes.forEach((agencyType) => {
         const option = document.createElement('option');
@@ -152,40 +224,113 @@ function setupAgencyFilterControls(pageController) {
         dropdown.appendChild(option);
     });
 
-    dropdownContainer.appendChild(dropdownLabel);
-    dropdownContainer.appendChild(dropdown);
-    menuContent.appendChild(dropdownContainer);
+    filterContainer.appendChild(dropdownLabel);
+    filterContainer.appendChild(dropdown);
 
     // Add "Apply Filter" button
-    const editButton = document.createElement('button');
-    editButton.id = 'editReportButton';
-    editButton.textContent = 'Apply Filter';
-    menuContent.appendChild(editButton);
+    const applyFilterButton = document.createElement('button');
+    applyFilterButton.id = 'applyFilterButton';
+    applyFilterButton.textContent = 'Apply Filter';
+    applyFilterButton.addEventListener('click', handleApplyFilter);
+    filterContainer.appendChild(applyFilterButton);
 
-    editButton.addEventListener('click', () => handleApplyFilter(pageController));
+    menuContent.appendChild(filterContainer);
 }
 
-async function handleApplyFilter(pageController) {
-    const selectedAgency = document.getElementById('agencyFilter').value;
-    const dataHold = globalState.getState().mainData || [];
-    const filteredData =
-        selectedAgency === 'All'
-            ? dataHold
-            : dataHold.filter((item) => item.agency_type === selectedAgency);
-
-    globalState.setState({ reportData: filteredData });
-    console.log("Filtered report data:", filteredData);
-
-    const orchestrator = new LoadOrchestrator(globalState.getState().selectedReportType, pageController);
-    orchestrator.refreshReport(); // Use refresh instead of orchestrateLoad
+/**
+ * Utility function to get selected agency
+ * @returns {string} Selected agency or 'All'
+ */
+function getSelectedAgency() {
+    const dropdown = document.getElementById('agencyFilter');
+    return dropdown ? dropdown.value : 'All';
 }
 
-function onDateRangeSelect(selectedRange, customData) {
-    globalState.setState({
-        dateRange: selectedRange,
-        customDateData: customData,
-    });
+/**
+ * Utility function to display loading message
+ */
+function displayLoadingMessage() {
+    // Check if the overlay already exists to prevent duplicates
+    if (document.getElementById('loadingOverlay')) return;
+
+    // Create the overlay div
+    const overlay = document.createElement('div');
+    overlay.id = 'loadingOverlay';
+    overlay.className = 'loading-overlay';
+    overlay.setAttribute('role', 'alert');
+    overlay.setAttribute('aria-live', 'assertive');
+    overlay.setAttribute('aria-busy', 'true');
+    
+    // Create the spinner div
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner';
+    
+    // Create the two bounce divs for the spinner
+    const bounce1 = document.createElement('div');
+    bounce1.className = 'double-bounce1';
+    const bounce2 = document.createElement('div');
+    bounce2.className = 'double-bounce2';
+    
+    // Append the bounces to the spinner
+    spinner.appendChild(bounce1);
+    spinner.appendChild(bounce2);
+    
+    // Create the loading text
+    const loadingText = document.createElement('p');
+    loadingText.textContent = 'Loading data...';
+    
+    // Append spinner and text to the overlay
+    overlay.appendChild(spinner);
+    overlay.appendChild(loadingText);
+    
+    // Append the overlay to the body
+    document.body.appendChild(overlay);
+    
+    // Prevent background scrolling
+    document.body.style.overflow = 'hidden';
 }
 
-// Export the template for testing or external registration
+/**
+ * Removes the loading overlay from the DOM
+ */
+function removeLoadingMessage() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+    // Restore scrolling
+    document.body.style.overflow = 'auto';
+}
+
+/**
+ * Utility function to display no data message
+ */
+function displayNoDataMessage() {
+    const reportContainer = document.getElementById('contentBody');
+    if (reportContainer) {
+        reportContainer.innerHTML = '<p>No data available for the selected date range.</p>';
+    }
+}
+
+/**
+ * Utility function to display no filtered data message
+ */
+function displayNoFilteredDataMessage() {
+    const reportContainer = document.getElementById('contentBody');
+    if (reportContainer) {
+        reportContainer.innerHTML = '<p>No data available for the selected filter.</p>';
+    }
+}
+
+/**
+ * Utility function to display error message
+ * @param {Error} error 
+ */
+function displayErrorMessage(error) {
+    const reportContainer = document.getElementById('contentBody');
+    if (reportContainer) {
+        reportContainer.innerHTML = `<p>Error fetching data: ${error.message}. Please try again later.</p>`;
+    }
+}
+
 export default agencyReportForm;

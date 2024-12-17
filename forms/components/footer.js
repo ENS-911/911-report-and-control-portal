@@ -1,5 +1,7 @@
 // footer.js
 
+import { globalState } from "../../reactive/state";
+
 export function createFooter(pageNumber, totalPages) {
     const footer = document.createElement('footer');
     footer.className = 'page-footer';

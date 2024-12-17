@@ -18,13 +18,14 @@ export class LoadOrchestrator {
     /**
      * Initializes the LoadOrchestrator with a specific template configuration.
      * @param {string} templateName - The name of the template to use.
+     * @param {PageController} pageController - The PageController instance.
      */
-    constructor(templateName) {
+    constructor(templateName, pageController) {
         this.templateConfig = templateRegistry.get(templateName);
         if (!this.templateConfig) {
             throw new Error(`Template configuration not found for: ${templateName}`);
         }
-        this.pageController = null;
+        this.pageController = pageController;
     }
 
     /**
@@ -46,12 +47,8 @@ export class LoadOrchestrator {
         try {
             console.log("Starting orchestrateLoad...");
 
-            // Check if reportData exists and has content
-            let reportData = globalState.getState().reportData;
-            if (!reportData || reportData.length === 0) {
-                console.log("No report data found. Fetching new data...");
-                reportData = await this.fetchAndSetReportData();
-            }
+            // Fetch new data
+            const reportData = await this.fetchAndSetReportData();
 
             if (!reportData || reportData.length === 0) {
                 throw new Error("No report data available to load components.");
@@ -59,47 +56,12 @@ export class LoadOrchestrator {
 
             console.log("Report data available for orchestrating load:", reportData);
 
-            // Initialize PageController with fixed page height and footer height
-            const MAX_PAGE_HEIGHT = 1056; // Fixed page height
-            const FOOTER_HEIGHT = 50; // Fixed footer height
-            this.pageController = new PageController(MAX_PAGE_HEIGHT, FOOTER_HEIGHT); // Instantiate PageController
-            globalState.setState({ pageController: this.pageController });
-            console.log("PageController initialized.");
-
             // Initialize components based on template configuration
             const componentOrder = this.templateConfig.components;
             console.log("Component order from template:", componentOrder);
 
-            for (const componentName of componentOrder) {
-                if (!componentName) {
-                    console.warn(`Component name is undefined or empty.`);
-                    continue; // Skip undefined or empty component names
-                }
-
-                let component = null;
-
-                switch (componentName) {
-                    case 'title':
-                        component = createTitleComponent(this.templateConfig.getTitle());
-                        break;
-                    case 'agencyType':
-                        component = await allAgencyTypes(); // Await asynchronous function
-                        break;
-                    case 'incidentType':
-                        component = await incidentTypeChart(); // Await asynchronous function
-                        break;
-                    case 'table':
-                        component = await createTableComponent(this.pageController); // Await asynchronous function
-                        break;
-                    default:
-                        console.warn(`Unknown component type: ${componentName}`);
-                }
-
-                if (component) {
-                    await this.pageController.addContentToPage(component);
-                    console.log(`Added ${componentName} component.`);
-                }
-            }
+            // Pass only `pageController` as `initializeComponents` expects
+            await this.templateConfig.initializeComponents(this.pageController);
 
             // Finalize all pages by adding footers to pages without them
             if (typeof this.pageController.finalizePages === 'function') {
@@ -115,6 +77,7 @@ export class LoadOrchestrator {
             console.log("Rendered all pages.");
         } catch (error) {
             console.error("Error in orchestrateLoad:", error);
+            // Optionally, display a global error message to the user
         }
     }
                   
@@ -131,13 +94,6 @@ export class LoadOrchestrator {
                 console.error("No report data available for refreshing.");
                 return;
             }
-
-            // Initialize a new PageController
-            const MAX_PAGE_HEIGHT = 1056; // Fixed page height
-            const FOOTER_HEIGHT = 50; // Fixed footer height
-            this.pageController = new PageController(MAX_PAGE_HEIGHT, FOOTER_HEIGHT);
-            globalState.setState({ pageController: this.pageController });
-            console.log("PageController initialized for refresh.");
 
             // Initialize components based on template configuration
             const componentOrder = this.templateConfig.components;
@@ -157,7 +113,7 @@ export class LoadOrchestrator {
                         component = await incidentTypeChart();
                         break;
                     case 'table':
-                        component = await createTableComponent(this.pageController);
+                        component = await createTableComponent(this.pageController, reportData);
                         break;
                     default:
                         console.warn(`Unknown component type: ${componentName}`);
@@ -194,12 +150,14 @@ export class LoadOrchestrator {
         try {
             console.log('Attempting to fetch report data...');
             const state = globalState.getState();
-            const reportType = state.selectedReportType;
+            // Remove reportType if it's not used
             const clientKey = state.clientData?.key;
 
             const reportFilters = this.buildReportFilters();
+            console.log('Report Filters:', reportFilters); // Debug log
 
-            const reportData = await fetchReportData(reportType, reportFilters, clientKey);
+            // Corrected the call to pass only reportFilters
+            const reportData = await fetchReportData(reportFilters);
             console.log('Fetched report data:', reportData);
             globalState.setState({
                 reportData,
@@ -243,6 +201,7 @@ export class LoadOrchestrator {
             filters.dateRange = dateRangeSelector || 'all';
         }
 
+        console.log('Built Report Filters:', filters); // Debug log
         return filters;
     }
 }

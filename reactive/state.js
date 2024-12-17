@@ -65,7 +65,7 @@ export const globalState = new State({
   mainData: null,
   activeData: [],  // Store active incidents
   todayData: [],   // Store today's incidents
-  reportData: [],  // Store report data
+  reportData: null,  // Store report data
 });
 
 // Function to initialize data fetching or pagination

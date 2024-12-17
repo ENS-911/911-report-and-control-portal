@@ -94,6 +94,12 @@ export async function createTableComponent(pageController) {
         const rowHeight = row.getBoundingClientRect().height;
         console.log(`Row ${index + 1} height: ${rowHeight}px`);
 
+        // Debugging: Ensure pageController has the necessary methods
+        console.log("Does pageController have getUsedSpaceOnPage?", typeof pageController.getUsedSpaceOnPage === 'function');
+        console.log("Does pageController have getAvailableSpace?", typeof pageController.getAvailableSpace === 'function');
+        console.log("Does pageController have addHeightToCurrentPage?", typeof pageController.addHeightToCurrentPage === 'function');
+        console.log("Does pageController have startNewPage?", typeof pageController.startNewPage === 'function');
+
         // Check if adding this row exceeds the available space on the current page
         if (pageController.getUsedSpaceOnPage() + rowHeight > pageController.getAvailableSpace()) {
             console.log(`Exceeded max page height with Row ${index + 1}. Starting new page.`);

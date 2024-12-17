@@ -18,16 +18,6 @@ export function loadPage() {
         reportTypeSelector.removeEventListener('change', handleReportTypeChange);
         reportTypeSelector.addEventListener('change', handleReportTypeChange);
     }
-
-    globalState.setState({ scaleRatio: 1 });
-
-    // Subscribe to reportData and pageController changes
-    globalState.subscribe((state) => {
-        if (state.reportData && state.pageController) {
-            console.log('reportData updated. Re-rendering agency components.');
-            agencyReportForm.initializeComponents(state.pageController, agencyReportForm.components);
-        }
-    });
 }
 
 async function handleReportTypeChange(e) {
@@ -43,7 +33,7 @@ async function loadForm(reportType) {
         if (formModule.loadReportComponents) {
             // Instantiate PageController
             const PageController = (await import('../forms/controllers/PageController.js')).default;
-            const pageController = new PageController('report-container');
+            const pageController = new PageController();
             globalState.setState({ pageController: pageController });
 
             // Load and initialize report components

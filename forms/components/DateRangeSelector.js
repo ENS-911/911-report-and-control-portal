@@ -1,6 +1,4 @@
-import { calculateAndSaveScaleRatio } from '../formUtils/dpiUtils.js';
 import { globalState } from '../../reactive/state.js';
-import { generateReport } from '../../pages/reportBuilder.js';
 
 // components/DateRangeSelector.js
 export function DateRangeSelector(onRangeSelect) {
@@ -35,7 +33,6 @@ export function DateRangeSelector(onRangeSelect) {
     // Call `onRangeSelect` callback on button click to provide selected data
     container.querySelector('#fetchReportData').addEventListener('click', () => {
         const selectedRange = container.querySelector('#dateRangeSelector').value;
-        globalState.setState( {pageController: ""} )
         const customData = getCustomData(container);
         onRangeSelect(selectedRange, customData);
     });
@@ -81,10 +78,4 @@ export function DateRangeSelector(onRangeSelect) {
     }
 
     return container;
-}
-
-function initializeScaleRatio() {
-    const containerWidth = 0.9 * document.getElementById('contentBody').offsetWidth;
-    const scaleRatio = calculateAndSaveScaleRatio(containerWidth); // This calculates and stores scaleRatio in global state
-    globalState.setState({ scaleRatio });
 }

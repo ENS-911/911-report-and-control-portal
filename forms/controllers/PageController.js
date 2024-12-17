@@ -1,6 +1,7 @@
 // PageController.js
 
-import { globalState } from '../../reactive/state.js';
+import { globalState } from '../../reactive/state.js'; // Adjust the path as necessary
+import { createFooter } from '../components/footer.js'; // Adjust the path as necessary
 
 /**
  * PageController manages the creation and organization of report pages.
@@ -8,23 +9,26 @@ import { globalState } from '../../reactive/state.js';
  */
 class PageController {
     /**
-     * Initializes the PageController with a fixed page size.
+     * Initializes the PageController with specified page and footer dimensions.
      * @param {number} maxPageHeight - The maximum height of a page in pixels.
      * @param {number} footerHeight - The height of the footer in pixels.
      */
     constructor(maxPageHeight = 1056, footerHeight = 50) {
-        this.pages = [];
-        this.maxPageHeight = maxPageHeight; // 1056px (8.5in * 96dpi)
-        this.footerHeight = footerHeight; // 50px
-        this.availableSpace = this.maxPageHeight - this.footerHeight - 40; // 40px padding (20px top + 20px bottom)
-        this.usedSpaceOnPage = 0; // Track used space on the current page
+        this.pages = []; // Array to hold all created pages
+        this.maxPageHeight = maxPageHeight; // e.g., 1056px (8.5in * 96dpi)
+        this.footerHeight = footerHeight; // e.g., 50px
+        this.padding = 40; // 20px top + 20px bottom padding
+        this.availableSpace = this.maxPageHeight - this.footerHeight - this.padding; // Usable space per page
+        this.usedSpaceOnPage = 0; // Tracks used space on the current page
 
-        this.contentBody = document.getElementById('contentBody');
+        console.log(`PageController Initialized with maxPageHeight: ${this.maxPageHeight}px, footerHeight: ${this.footerHeight}px, availableSpace: ${this.availableSpace}px`);
+
+        this.contentBody = document.getElementById('contentBody'); // Container for all pages
         if (!this.contentBody) {
             console.error('#contentBody not found. Ensure that it exists in the DOM.');
         }
 
-        this.currentPage = this.createNewPage();
+        this.currentPage = this.createNewPage(); // Initialize with the first page
     }
 
     /**
@@ -34,6 +38,7 @@ class PageController {
     createNewPage() {
         const page = document.createElement('div');
         page.className = 'report-page';
+        page.style.position = 'relative'; // To position footer correctly
 
         // Create content container
         const content = document.createElement('div');
@@ -41,15 +46,16 @@ class PageController {
         page.appendChild(content);
 
         // Create footer container
-        const footer = document.createElement('div');
-        footer.className = 'page-footer';
-        page.appendChild(footer);
+        const footerContainer = document.createElement('div');
+        footerContainer.className = 'page-footer-container'; // Separate container for footer
+        page.appendChild(footerContainer);
 
         this.pages.push(page);
 
         // Append the page to the DOM immediately
         if (this.contentBody) {
             this.contentBody.appendChild(page);
+            console.log(`Appended new page (${this.pages.length}) to #contentBody.`);
         }
 
         return page;
@@ -73,10 +79,11 @@ class PageController {
             return;
         }
 
-        // Append the component so it is in the DOM
+        // Append the component to the content container
         contentContainer.appendChild(component);
+        console.log(`Component appended to current page (${this.pages.length}).`);
 
-        // Wait multiple frames for rendering and layout
+        // Wait for rendering to ensure accurate measurements
         await this.waitForRender();
         await this.waitForRender();
 
@@ -90,12 +97,13 @@ class PageController {
 
             // Remove the component from the current page
             contentContainer.removeChild(component);
+            console.log(`Component removed from current page (${this.pages.length}).`);
 
-            // Add footer to the current page
-            this.addFooter(this.pages.length);
+            // Finalize the current page by adding a footer
+            this.addFooter(this.pages[this.pages.length - 1], this.pages.length);
 
             // Create a new page
-            this.currentPage = this.createNewPage();
+            this.startNewPage();
             this.usedSpaceOnPage = 0; // Reset used space for the new page
 
             const newContentContainer = this.currentPage.querySelector('.content');
@@ -106,21 +114,22 @@ class PageController {
 
             // Add the component to the new page
             newContentContainer.appendChild(component);
+            console.log(`Component moved to new page (${this.pages.length}).`);
 
-            // Wait again for rendering on the new page
+            // Wait for rendering again
             await this.waitForRender();
             await this.waitForRender();
 
             const newComponentHeight = component.getBoundingClientRect().height;
-            console.log(`New component height on new page: ${newComponentHeight}px`);
+            console.log(`Component added to new page with height: ${newComponentHeight}px`);
 
             // Update used space on the new page
-            this.usedSpaceOnPage += newComponentHeight;
+            this.addHeightToCurrentPage(newComponentHeight);
 
             if (newComponentHeight > this.availableSpace) {
                 console.warn(`Component itself is larger than a single page (${newComponentHeight}px > ${this.availableSpace}px). Consider splitting it.`);
             } else {
-                console.log(`Component added to new page (${this.pages.length}). Used space: ${this.usedSpaceOnPage}px`);
+                console.log(`Component added to new page (${this.pages.length}). Used space: ${this.usedSpaceOnPage}px of ${this.availableSpace}px`);
             }
         } else {
             // Fits on the current page
@@ -130,62 +139,53 @@ class PageController {
     }
 
     /**
-     * Adds a footer to the specified page.
+     * Adds a footer to the specified page using the createFooter function.
+     * @param {HTMLElement} page - The page element to add the footer to.
      * @param {number} pageNumber - The current page number (1-based index).
      */
-    addFooter(pageNumber) {
-        const footer = this.currentPage.querySelector('.page-footer');
-        if (!footer) {
-            console.error("Footer container not found in current page.");
+    addFooter(page, pageNumber) {
+        if (!(page instanceof HTMLElement)) {
+            console.error("Invalid page element.");
             return;
         }
 
-        const leftSection = document.createElement('div');
-        leftSection.className = 'footer-left';
+        const footerContainer = page.querySelector('.page-footer-container');
+        if (!footerContainer) {
+            console.error("Footer container not found in the provided page.");
+            return;
+        }
 
-        const formattedDateTime = new Date().toLocaleString();
-        leftSection.innerHTML = `
-            <p>Report Generated: ${formattedDateTime}</p>
-            <p>Page ${pageNumber} of ${this.pages.length}</p>
-        `;
+        // Create the footer using createFooter function
+        const footer = createFooter(pageNumber, this.pages.length);
 
-        const centerSection = document.createElement('div');
-        centerSection.className = 'footer-center';
-        centerSection.textContent = globalState.getState().reportTitle || 'Report Title';
+        // Append the footer to the footer container
+        footerContainer.appendChild(footer);
 
-        const rightSection = document.createElement('div');
-        rightSection.className = 'footer-right';
-        const userInfo = JSON.parse(localStorage.getItem('user')) || {};
-        rightSection.innerHTML = `
-            <p>Report Generated By: ${userInfo.fname || ''} ${userInfo.lname || ''}</p>
-            <p>Created With: 911 Emerge-N-See Report Generator</p>
-        `;
-
-        // Clear existing footer content and append new sections
-        footer.innerHTML = '';
-        footer.appendChild(leftSection);
-        footer.appendChild(centerSection);
-        footer.appendChild(rightSection);
+        console.log(`Footer added to page ${pageNumber} of ${this.pages.length}.`);
     }
 
     /**
      * Finalizes all pages by adding footers to pages without them.
+     * This should be called after all components have been added.
      * @returns {Array<HTMLElement>} - The array of finalized pages.
      */
     finalizePages() {
+        const totalPages = this.pages.length;
         this.pages.forEach((page, index) => {
-            const footer = page.querySelector('.page-footer');
+            const footerContainer = page.querySelector('.page-footer-container');
+            const footer = footerContainer.querySelector('.page-footer');
             const hasFooter = footer && footer.innerHTML.trim() !== '';
             if (!hasFooter) {
-                this.addFooter(index + 1);
+                this.addFooter(page, index + 1);
             }
         });
+        console.log("All pages finalized with footers.");
         return this.pages; // Return the pages array
     }
 
     /**
      * Waits for the next animation frame to ensure rendering is complete.
-     * @returns {Promise} - Resolves after one animation frame.
+     * @returns {Promise} - Resolves after two animation frames.
      */
     waitForRender() {
         return new Promise(resolve => {
@@ -196,31 +196,43 @@ class PageController {
     }
 
     /**
-     * Starts a new page by adding a footer to the current page and creating a new one.
+     * Clears all existing pages and resets internal state.
+     * Typically called before generating a new report.
      */
-    async startNewPage() {
-        // Add footer to the current page
-        this.addFooter(this.pages.length);
-
+    clearContent() {
+        console.log('Called clearContent: Resetting pages and used space.');
+        // Remove all existing pages from the DOM
+        this.pages.forEach(page => {
+            if (this.contentBody.contains(page)) {
+                this.contentBody.removeChild(page);
+                console.log('Removed a page from the DOM.');
+            }
+        });
+        // Reset internal state
+        this.pages = [];
+        this.usedSpaceOnPage = 0;
         // Create a new page
         this.currentPage = this.createNewPage();
-        this.usedSpaceOnPage = 0; // Reset used space for the new page
+        console.log('Initialized a new page after clearing content.');
     }
 
     /**
-     * Adds additional height to the current page's used space.
-     * @param {number} height - The height to add.
+     * Starts a new page and sets it as the current page.
+     */
+    startNewPage() {
+        const newPage = this.createNewPage();
+        this.currentPage = newPage;
+        this.usedSpaceOnPage = 0;
+        console.log(`New page created. Total pages: ${this.pages.length}`);
+    }
+
+    /**
+     * Adds the given height to the used space on the current page.
+     * @param {number} height - The height to add in pixels.
      */
     addHeightToCurrentPage(height) {
         this.usedSpaceOnPage += height;
-    }
-
-    /**
-     * Gets the available space on the current page.
-     * @returns {number} - The available space in pixels.
-     */
-    getAvailableSpace() {
-        return this.availableSpace;
+        console.log(`Added height ${height}px to current page. Total used space: ${this.usedSpaceOnPage}px of ${this.availableSpace}px`);
     }
 
     /**
@@ -231,9 +243,12 @@ class PageController {
         return this.usedSpaceOnPage;
     }
 
-    clearContent() {
-        const contentContainer = this.currentPage.querySelector('.content');
-        this.contentContainer.innerHTML = '';
+    /**
+     * Gets the available space on the current page.
+     * @returns {number} - The available space in pixels.
+     */
+    getAvailableSpace() {
+        return this.availableSpace;
     }
 }
 
