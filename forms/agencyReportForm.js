@@ -8,7 +8,7 @@ import { createTableComponent } from '../forms/components/tableComponent.js';
 import { allAgencyTypes } from '../forms/components/allAgencyTypes.js';
 import { singleAgencyType } from '../forms/components/singleAgencyType.js';
 import { incidentTypeChart } from '../forms/components/incidentTypeChart.js';
-import LoadOrchestrator from './controllers/LoadOrchestrator.js'; // Ensure correct path
+import LoadOrchestrator from './controllers/LoadOrchestrator.js';
 
 const agencyReportForm = {
     name: "Agency Report",
@@ -125,22 +125,21 @@ async function onRangeSelect(selectedRange, customData) {
             ...customData,
         };
 
-        // Validate user inputs if necessary
-        // e.g., validateCustomData(selectedRange, customData);
-
-        // Update globalState to signal that data fetching should occur
         globalState.setState({
             reportFilters, // Store the filters
         });
 
-        // Instantiate LoadOrchestrator if not already instantiated
         const pageController = globalState.getState().pageController;
         if (!pageController) {
             console.error('PageController is not set in globalState.');
             throw new Error('PageController is not initialized.');
         }
+
         const orchestrator = new LoadOrchestrator('agencyReport', pageController);
         await orchestrator.orchestrateLoad(); // Orchestrate the loading process
+
+        // After orchestrateLoad finishes and the report pages are rendered:
+        setupAgencyFilterControls(); // Reintroduce this call
 
         removeLoadingMessage(); // Remove loading indicator after data is loaded
 
@@ -151,23 +150,6 @@ async function onRangeSelect(selectedRange, customData) {
     } finally {
         fetchButton.disabled = false; // Re-enable the button
     }
-}
-
-/**
- * Renders the report based on globalState.reportData
- */
-function renderReport() {
-    console.log('Rendering report with data:', globalState.getState().reportData);
-    const pageController = globalState.getState().pageController;
-    if (!pageController) {
-        console.error('PageController is not available for rendering.');
-        return;
-    }
-    pageController.clearContent(); // Clear existing report
-
-    // Instantiate LoadOrchestrator with the correct template and PageController
-    const orchestrator = new LoadOrchestrator('agencyReport', pageController);
-    orchestrator.orchestrateLoad(); // Orchestrate the loading process
 }
 
 /**
@@ -184,7 +166,10 @@ async function handleApplyFilter() {
     if (filteredData.length > 0) {
         globalState.setState({ reportData: [...filteredData] }); // Shallow copy
         console.log("Filtered report data:", filteredData);
-        renderReport(); // Directly render with filtered data
+        const pageController = globalState.getState().pageController;
+        pageController.clearContent();
+        const orchestrator = new LoadOrchestrator('agencyReport', pageController);
+        await orchestrator.refreshReport(); // Directly render with filtered data
     } else {
         console.warn('No data matches the selected filter.');
         displayNoFilteredDataMessage(); // Implement this function to inform the user
@@ -300,16 +285,6 @@ function removeLoadingMessage() {
     }
     // Restore scrolling
     document.body.style.overflow = 'auto';
-}
-
-/**
- * Utility function to display no data message
- */
-function displayNoDataMessage() {
-    const reportContainer = document.getElementById('contentBody');
-    if (reportContainer) {
-        reportContainer.innerHTML = '<p>No data available for the selected date range.</p>';
-    }
 }
 
 /**
