@@ -1,6 +1,6 @@
 // footer.js
 
-import { globalState } from "../../reactive/state";
+import { globalState } from "../../reactive/state.js";
 
 export function createFooter(pageNumber, totalPages) {
     const footer = document.createElement('footer');
