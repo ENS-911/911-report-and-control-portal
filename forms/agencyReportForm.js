@@ -42,29 +42,30 @@ const agencyReportForm = {
                 await pageController.addContentToPage(titleComponent, true);
             },
             agencyType: async () => {
+                const data = globalState.getState().reportData || []; // Get fresh data each time
                 const agencyTypes = [...new Set(data.map(item => item.agency_type))];
-                let agencyTypeComponent;
 
+                console.log('Filtered length: ', agencyTypes.length)
+            
+                let agencyTypeComponent;
                 if (agencyTypes.length > 1) {
-                    agencyTypeComponent = await allAgencyTypes(); // Should return a Node
+                    agencyTypeComponent = await allAgencyTypes();
                 } else if (agencyTypes.length === 1) {
-                    agencyTypeComponent = await singleAgencyType(agencyTypes[0]); // Pass the single agency type
+                    agencyTypeComponent = await singleAgencyType(agencyTypes[0]);
                 } else {
                     console.warn('No agency data available.');
-                    // Optionally, display a message indicating no data
                     agencyTypeComponent = document.createElement('div');
                     agencyTypeComponent.id = 'no-data-component';
                     agencyTypeComponent.innerHTML = `<p>No agency data available.</p>`;
                 }
-
-                // Check if agencyTypeComponent is a valid Node
+            
                 if (!agencyTypeComponent || !(agencyTypeComponent instanceof Node)) {
                     console.error('agencyTypeComponent is not a valid DOM Node:', agencyTypeComponent);
-                    return; // Skip adding this component to the page
+                    return;
                 }
-
+            
                 await pageController.addContentToPage(agencyTypeComponent);
-            },
+            },            
             incidentType: async () => {
                 const incidentTypeComponent = incidentTypeChart();
                 if (!incidentTypeComponent || !(incidentTypeComponent instanceof Node)) {

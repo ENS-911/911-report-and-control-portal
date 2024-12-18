@@ -87,60 +87,35 @@ export class LoadOrchestrator {
     async refreshReport() {
         try {
             console.log("Starting refreshReport...");
-
-            // Use existing report data
+    
             const reportData = globalState.getState().reportData || [];
             if (reportData.length === 0) {
                 console.error("No report data available for refreshing.");
                 return;
             }
-
-            // Initialize components based on template configuration
+    
             const componentOrder = this.templateConfig.components;
             console.log("Component order from template:", componentOrder);
-
-            for (const componentName of componentOrder) {
-                let component = null;
-
-                switch(componentName) { // Switching directly on the string
-                    case 'title':
-                        component = createTitleComponent(this.templateConfig.getTitle());
-                        break;
-                    case 'agencyType':
-                        component = await allAgencyTypes();
-                        break;
-                    case 'incidentType':
-                        component = await incidentTypeChart();
-                        break;
-                    case 'table':
-                        component = await createTableComponent(this.pageController, reportData);
-                        break;
-                    default:
-                        console.warn(`Unknown component type: ${componentName}`);
-                }
-
-                if (component) {
-                    await this.pageController.addContentToPage(component);
-                    console.log(`Added ${componentName} component.`);
-                }
-            }
-
-            // Finalize all pages by adding footers
+    
+            await this.templateConfig.initializeComponents(this.pageController);
+            console.log("Refreshed report with updated components.");
+    
+            // Components are already initialized and added by initializeComponents(). No need to add them again here.
+    
             if (typeof this.pageController.finalizePages === 'function') {
-                const finalizedPages = this.pageController.finalizePages(); // Now returns pages
+                const finalizedPages = this.pageController.finalizePages(); 
                 console.log("Pages finalized with footers:", finalizedPages);
             } else {
                 console.error("finalizePages method is not defined in PageController.");
             }
-
-            // Render all pages to the DOM
+    
             console.log("Rendering pages:", this.pageController.pages);
             renderPages(this.pageController.pages);
             console.log("Refreshed and rendered all pages.");
         } catch (error) {
             console.error("Error in refreshReport:", error);
         }
-    }    
+    }       
 
     /**
      * Fetches report data and sets it in the global state.
