@@ -32,7 +32,7 @@ async function loadForm(reportType) {
 
         if (formModule.loadReportComponents) {
             // Instantiate PageController
-            const PageController = (await import('../forms/controllers/PageController.js')).default;
+            const PageController = (await import('../forms/controllers/pageController.js')).default;
             const pageController = new PageController();
             globalState.setState({ pageController: pageController });
 

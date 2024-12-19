@@ -3,7 +3,7 @@
 import { globalState } from '../../reactive/state.js';
 import { fetchReportData } from '../../api/fetchReportData.js';
 import { renderPages } from '../components/pageBuilder.js';
-import PageController from './PageController.js';
+import PageController from './pageController.js';
 import { createTitleComponent } from '../components/reportTitle.js';
 import { allAgencyTypes } from '../components/allAgencyTypes.js';
 import { createTableComponent } from '../components/tableComponent.js';
