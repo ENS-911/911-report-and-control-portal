@@ -92,6 +92,9 @@ export async function singleAgencyType() {
     container.appendChild(chartContainer);
     container.appendChild(labelContainer);
 
+    console.log('chartData:', chartData);
+    console.log('battalionCounts:', battalionCounts);
+
     // **Wait for the chart to render before returning the container**
     await new Promise((resolve, reject) => {
         try {

@@ -156,25 +156,26 @@ async function onRangeSelect(selectedRange, customData) {
 /**
  * Handles the "Apply Filter" button click
  */
-async function handleApplyFilter() {
-    const selectedAgency = getSelectedAgency(); // Implement this function to retrieve selected agency
-    const dataHold = globalState.getState().mainData || [];
-    const filteredData =
-        selectedAgency === 'All'
-            ? [...dataHold]
-            : dataHold.filter((item) => item.agency_type === selectedAgency);
+const selectedAgency = document.getElementById('agencyFilter').value;
+const selectedBattalion = document.getElementById('battalionFilter').value;
+const selectedIncident = document.getElementById('incidentFilter').value;
 
-    if (filteredData.length > 0) {
-        globalState.setState({ reportData: [...filteredData] }); // Shallow copy
-        console.log("Filtered report data:", filteredData);
-        const pageController = globalState.getState().pageController;
-        pageController.clearContent();
-        const orchestrator = new LoadOrchestrator('agencyReport', pageController);
-        await orchestrator.refreshReport(); // Directly render with filtered data
-    } else {
-        console.warn('No data matches the selected filter.');
-        displayNoFilteredDataMessage(); // Implement this function to inform the user
-    }
+let filteredData = ... // apply all filters
+
+// Decide what to display
+if (selectedBattalion !== 'All' && selectedIncident === 'All') {
+    // Single battalion chosen
+    // Call a modified version of singleAgencyType that groups by type_description
+    const container = singleAgencyType(filteredData, { groupBy: 'type_description' });
+    pageController.addContentToPage(container);
+} else if (selectedIncident !== 'All' && selectedBattalion === 'All') {
+    // Single incident chosen and all battalions
+    // Call incidentTypeChart but grouping data by battalion instead of type
+    const container = incidentTypeChart(filteredData, { groupBy: 'battalion' });
+    pageController.addContentToPage(container);
+} else {
+    // Default scenario: multiple agencies or battalions or incidents
+    // Call them as you originally did
 }
 
 /**
@@ -184,43 +185,168 @@ function setupAgencyFilterControls() {
     const menuContent = document.getElementById('menuContent');
 
     // Remove existing filter controls if any
-    const existingFilter = menuContent.querySelector('#agencyFilterControls');
+    const existingFilter = menuContent.querySelector('#agencyFilterControlsWrapper');
     if (existingFilter) existingFilter.remove();
 
-    // Create filter controls
+    // Create a wrapper to center everything
+    const wrapper = document.createElement('div');
+    wrapper.id = 'agencyFilterControlsWrapper';
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.textAlign = 'center';
+
+    // Insert an SVG (as <img>) above the first label
+    const svgImg = document.createElement('div');
+    svgImg.innerHTML = `
+        <svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true" style="display:block;">
+            <path d="M5 10h40l-15 20v10l-10 5v-15L5 10Z" fill="white" stroke="none"/>
+        </svg>
+    `;
+    // Append svgImg above your label in the wrapper as you did with the img
+    wrapper.appendChild(svgImg);
+
+    // Create filter controls container
     const filterContainer = document.createElement('div');
     filterContainer.id = 'agencyFilterControls';
+    filterContainer.style.display = 'flex';
+    filterContainer.style.flexDirection = 'column';
+    filterContainer.style.alignItems = 'center';
+    filterContainer.style.width = '100%'; // Adjust width as needed
 
-    const dropdownLabel = document.createElement('label');
-    dropdownLabel.textContent = 'Filter by Agency:';
-    dropdownLabel.setAttribute('for', 'agencyFilter');
+    // Create agency dropdown
+    const agencyLabel = document.createElement('label');
+    agencyLabel.textContent = 'Filter by Agency:';
+    agencyLabel.setAttribute('for', 'agencyFilter');
+    agencyLabel.style.marginBottom = '5px';
+    filterContainer.appendChild(agencyLabel);
 
-    const dropdown = document.createElement('select');
-    dropdown.id = 'agencyFilter';
-    dropdown.innerHTML = `<option value="All">All</option>`; // Add "All" option
+    const agencySelect = document.createElement('select');
+    agencySelect.id = 'agencyFilter';
+    filterContainer.appendChild(agencySelect);
 
-    // Populate dropdown with unique agency types
-    const reportData = globalState.getState().reportData || [];
-    const uniqueAgencyTypes = [...new Set(reportData.map(item => item.agency_type))];
+    // Create battalion dropdown
+    const battalionLabel = document.createElement('label');
+    battalionLabel.textContent = 'Filter by Battalion:';
+    battalionLabel.setAttribute('for', 'battalionFilter');
+    battalionLabel.style.marginTop = '10px';
+    battalionLabel.style.marginBottom = '5px';
+    filterContainer.appendChild(battalionLabel);
 
-    uniqueAgencyTypes.forEach((agencyType) => {
-        const option = document.createElement('option');
-        option.value = agencyType;
-        option.textContent = agencyType;
-        dropdown.appendChild(option);
-    });
+    const battalionSelect = document.createElement('select');
+    battalionSelect.id = 'battalionFilter';
+    filterContainer.appendChild(battalionSelect);
 
-    filterContainer.appendChild(dropdownLabel);
-    filterContainer.appendChild(dropdown);
+    // Create incident type dropdown
+    const incidentLabel = document.createElement('label');
+    incidentLabel.textContent = 'Filter by Incident Type:';
+    incidentLabel.setAttribute('for', 'incidentFilter');
+    incidentLabel.style.marginTop = '10px';
+    incidentLabel.style.marginBottom = '5px';
+    filterContainer.appendChild(incidentLabel);
+
+    const incidentSelect = document.createElement('select');
+    incidentSelect.id = 'incidentFilter';
+    filterContainer.appendChild(incidentSelect);
 
     // Add "Apply Filter" button
     const applyFilterButton = document.createElement('button');
     applyFilterButton.id = 'applyFilterButton';
     applyFilterButton.textContent = 'Apply Filter';
+    applyFilterButton.style.marginTop = '10px';
     applyFilterButton.addEventListener('click', handleApplyFilter);
     filterContainer.appendChild(applyFilterButton);
 
-    menuContent.appendChild(filterContainer);
+    wrapper.appendChild(filterContainer);
+    menuContent.appendChild(wrapper);
+
+    // Initial population of agency dropdown
+    populateAgencyDropdown();
+
+    // Add event listeners for cascading changes
+    agencySelect.addEventListener('change', () => {
+        populateBattalionAndIncidentDropdowns();
+    });
+
+    battalionSelect.addEventListener('change', () => {
+        populateIncidentDropdown();
+    });
+
+    // Functions to populate dropdowns
+    function populateAgencyDropdown() {
+        const reportData = globalState.getState().reportData || [];
+        const uniqueAgencyTypes = [...new Set(reportData.map(item => item.agency_type))];
+
+        agencySelect.innerHTML = ''; // Clear existing options
+        addAllOption(agencySelect);
+
+        uniqueAgencyTypes.forEach((agencyType) => {
+            const option = document.createElement('option');
+            option.value = agencyType;
+            option.textContent = agencyType;
+            agencySelect.appendChild(option);
+        });
+
+        // Trigger initial population of next dropdowns
+        populateBattalionAndIncidentDropdowns();
+    }
+
+    function populateBattalionAndIncidentDropdowns() {
+        const reportData = globalState.getState().reportData || [];
+        const selectedAgency = agencySelect.value;
+        let filteredData = reportData;
+
+        if (selectedAgency !== 'All') {
+            filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
+        }
+
+        // Populate Battalion
+        const uniqueBattalions = [...new Set(filteredData.map(item => item.battalion))].filter(b => b);
+        battalionSelect.innerHTML = '';
+        addAllOption(battalionSelect);
+
+        uniqueBattalions.forEach(b => {
+            const option = document.createElement('option');
+            option.value = b;
+            option.textContent = b;
+            battalionSelect.appendChild(option);
+        });
+
+        // After updating battalion, update incident
+        populateIncidentDropdown();
+    }
+
+    function populateIncidentDropdown() {
+        const reportData = globalState.getState().reportData || [];
+        const selectedAgency = agencySelect.value;
+        const selectedBattalion = battalionSelect.value;
+        let filteredData = reportData;
+
+        if (selectedAgency !== 'All') {
+            filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
+        }
+        if (selectedBattalion !== 'All') {
+            filteredData = filteredData.filter(item => item.battalion === selectedBattalion);
+        }
+
+        const uniqueIncidents = [...new Set(filteredData.map(item => item.type_description))].filter(i => i);
+        incidentSelect.innerHTML = '';
+        addAllOption(incidentSelect);
+
+        uniqueIncidents.forEach(i => {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            incidentSelect.appendChild(option);
+        });
+    }
+
+    function addAllOption(selectElement) {
+        const allOption = document.createElement('option');
+        allOption.value = 'All';
+        allOption.textContent = 'All';
+        selectElement.appendChild(allOption);
+    }
 }
 
 /**

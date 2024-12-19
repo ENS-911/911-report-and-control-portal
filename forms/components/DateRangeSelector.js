@@ -7,6 +7,8 @@ export function DateRangeSelector(onRangeSelect) {
     container.style.display = 'flex';
 
     container.innerHTML = `
+        <div class="report-type-selector-wrapper" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+        <img src="https://portal.911emergensee.com/img/Filter Icon 2.svg" alt="Report Icon" style="width:50px; height:50px; margin-bottom:10px;" />
         <label for="dateRangeSelector">Select Report Date Range</label>
         <select id="dateRangeSelector">
           <option value="currentActive">Current Active</option>
@@ -25,6 +27,7 @@ export function DateRangeSelector(onRangeSelect) {
         </select>
         <div id="customDateInput" style="display: none;"></div>
         <button id="fetchReportData">Fetch Data</button>
+        </div>
     `;
 
     // Handle changes within the component
