@@ -156,26 +156,40 @@ async function onRangeSelect(selectedRange, customData) {
 /**
  * Handles the "Apply Filter" button click
  */
-const selectedAgency = document.getElementById('agencyFilter').value;
-const selectedBattalion = document.getElementById('battalionFilter').value;
-const selectedIncident = document.getElementById('incidentFilter').value;
+async function handleApplyFilter() {
+    // Only read these elements now, when the user actually clicks "Apply Filter"
+    const selectedAgency = document.getElementById('agencyFilter').value;
+    const selectedBattalion = document.getElementById('battalionFilter').value;
+    const selectedIncident = document.getElementById('incidentFilter').value;
 
-let filteredData = ... // apply all filters
+    const dataHold = globalState.getState().mainData || [];
+    let filteredData = dataHold;
 
-// Decide what to display
-if (selectedBattalion !== 'All' && selectedIncident === 'All') {
-    // Single battalion chosen
-    // Call a modified version of singleAgencyType that groups by type_description
-    const container = singleAgencyType(filteredData, { groupBy: 'type_description' });
-    pageController.addContentToPage(container);
-} else if (selectedIncident !== 'All' && selectedBattalion === 'All') {
-    // Single incident chosen and all battalions
-    // Call incidentTypeChart but grouping data by battalion instead of type
-    const container = incidentTypeChart(filteredData, { groupBy: 'battalion' });
-    pageController.addContentToPage(container);
-} else {
-    // Default scenario: multiple agencies or battalions or incidents
-    // Call them as you originally did
+    if (selectedAgency !== 'All') {
+        filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
+    }
+
+    if (selectedBattalion !== 'All') {
+        filteredData = filteredData.filter(item => item.battalion === selectedBattalion);
+    }
+
+    if (selectedIncident !== 'All') {
+        filteredData = filteredData.filter(item => item.type_description === selectedIncident);
+    }
+
+    if (filteredData.length > 0) {
+        globalState.setState({ reportData: filteredData });
+        console.log("Filtered report data:", filteredData);
+
+        const pageController = globalState.getState().pageController;
+        pageController.clearContent();
+
+        const orchestrator = new LoadOrchestrator(globalState.getState().selectedReportType, pageController);
+        await orchestrator.refreshReport(); // or initializeComponents if needed
+    } else {
+        console.warn('No data matches the selected filters.');
+        displayNoFilteredDataMessage();
+    }
 }
 
 /**

@@ -3,39 +3,60 @@
 import { globalState } from '../../reactive/state.js';
 
 /**
- * Creates and returns a DOM element containing a pie chart of battalion types and corresponding labels.
+ * Creates and returns a DOM element containing a pie chart of either battalions or type_descriptions (depending on options).
  * Utilizes Highcharts for chart rendering.
- * @returns {HTMLElement} - The container DOM element for the battalion types chart and labels.
+ * 
+ * @param {Array} customData - Optional data array to use instead of globalState.reportData.
+ * @param {Object} options - Optional configuration object.
+ *   options.groupBy can be 'battalion' (default) or 'type_description'.
+ * @returns {HTMLElement} - The container DOM element for the chart and labels.
  */
-export async function singleAgencyType() {
-    const reportData = globalState.getState().reportData || [];
-    const agencyName = reportData.length > 0 ? reportData[0].agency_type : 'Unknown Agency';
+export async function singleAgencyType(customData, options = {}) {
+    console.log(customData)
+    let data = customData || globalState.getState().reportData || [];
+
+    console.error('Expected data to be an array but got:', data);
+
+    // Ensure data is an array
+    if (!Array.isArray(data)) {
+        // data is not an array, return early with a no-data container
+        const container = document.createElement('div');
+        container.className = 'single-agency-type';
+        const noDataMessage = document.createElement('div');
+        noDataMessage.className = 'no-data-message';
+        noDataMessage.textContent = 'No data available.';
+        container.appendChild(noDataMessage);
+        return container;
+    }
+
+    const groupByField = (options.groupBy === 'type_description') ? 'type_description' : 'battalion';
+    const agencyName = data.length > 0 ? data[0].agency_type : 'Unknown Agency';
 
     // Create container
     const container = document.createElement('div');
     container.className = 'single-agency-type';
 
     // Process data for chart and labels
-    const battalionCounts = {};
-    reportData.forEach((item) => {
-        if (item.battalion) { // Ensure battalion exists
-            battalionCounts[item.battalion] = (battalionCounts[item.battalion] || 0) + 1;
+    const counts = {};
+    data.forEach((item) => {
+        const fieldValue = item[groupByField];
+        if (fieldValue) {
+            counts[fieldValue] = (counts[fieldValue] || 0) + 1;
         }
     });
 
-    const totalEvents = Object.values(battalionCounts).reduce((sum, count) => sum + count, 0);
+    // Calculate total events
+    let entries = Object.entries(counts).filter(([_, count]) => count > 0);
+    const totalEvents = entries.reduce((sum, [_, count]) => sum + count, 0);
 
-    const chartData = Object.entries(battalionCounts).map(([battalion, count]) => ({
-        name: battalion,
-        y: count,
-        // Removed 'color' to let Highcharts handle color assignments dynamically
-    }));
+    // Convert to chartData format
+    const chartData = entries.map(([name, y]) => ({ name, y }));
 
-    // Handle case when chartData is empty
+    // Handle case when chartData is empty (no data)
     if (chartData.length === 0) {
         const noDataMessage = document.createElement('div');
         noDataMessage.className = 'no-data-message';
-        noDataMessage.textContent = 'No data available for the selected agency.';
+        noDataMessage.textContent = 'No data available.';
         container.appendChild(noDataMessage);
         return container; // Return container with no data message
     }
@@ -54,22 +75,22 @@ export async function singleAgencyType() {
     titleLabel.className = 'label-title';
     labelContainer.appendChild(titleLabel);
 
-    // Add battalion names and counts
+    // Add names and counts for each entry
     chartData.forEach(({ name, y }) => {
-        const battalionLabel = document.createElement('div');
-        battalionLabel.className = 'battalion-label';
+        const entryLabel = document.createElement('div');
+        entryLabel.className = 'entry-label';
 
-        const battalionName = document.createElement('span');
-        battalionName.textContent = name;
-        battalionName.className = 'battalion-name';
+        const entryName = document.createElement('span');
+        entryName.textContent = name;
+        entryName.className = 'entry-name';
 
-        const battalionCount = document.createElement('span');
-        battalionCount.textContent = y;
-        battalionCount.className = 'battalion-count';
+        const entryCount = document.createElement('span');
+        entryCount.textContent = y;
+        entryCount.className = 'entry-count';
 
-        battalionLabel.appendChild(battalionName);
-        battalionLabel.appendChild(battalionCount);
-        labelContainer.appendChild(battalionLabel);
+        entryLabel.appendChild(entryName);
+        entryLabel.appendChild(entryCount);
+        labelContainer.appendChild(entryLabel);
     });
 
     // Add total at the bottom
@@ -92,13 +113,13 @@ export async function singleAgencyType() {
     container.appendChild(chartContainer);
     container.appendChild(labelContainer);
 
+    // Log for debugging
     console.log('chartData:', chartData);
-    console.log('battalionCounts:', battalionCounts);
+    console.log('counts:', counts);
 
-    // **Wait for the chart to render before returning the container**
-    await new Promise((resolve, reject) => {
+    // Wait for the chart to render before returning the container
+    await new Promise((resolve) => {
         try {
-            // Render pie chart using Highcharts
             Highcharts.chart(chartContainer, {
                 chart: {
                     type: 'pie',
@@ -139,7 +160,7 @@ export async function singleAgencyType() {
                 series: [
                     {
                         name: 'Events',
-                        colorByPoint: true, // Let Highcharts assign colors
+                        colorByPoint: true,
                         data: chartData,
                     },
                 ],
@@ -148,16 +169,13 @@ export async function singleAgencyType() {
             });
         } catch (error) {
             console.error('Error rendering Highcharts:', error);
-            // Display error message within the chart container
             const errorMsg = document.createElement('div');
             errorMsg.className = 'chart-error';
             errorMsg.textContent = 'Failed to render chart.';
             chartContainer.appendChild(errorMsg);
-            // Resolve even if the chart fails to render
             resolve();
         }
     });
 
-    // **Return the container with the chart and labels after the chart has rendered**
     return container;
 }
