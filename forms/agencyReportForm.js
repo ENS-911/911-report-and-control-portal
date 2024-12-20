@@ -13,12 +13,13 @@ const agencySelect = document.createElement('select');
 const battalionSelect = document.createElement('select');
 const incidentSelect = document.createElement('select');
 
+const state = globalState.getState();
+
 const agencyReportForm = {
     name: "Agency Report",
     components: ['title', 'agencyType', 'incidentType', 'table'], // Added 'incidentType'
 
     getTitle: function () {
-        const state = globalState.getState();
         return state.reportTitle || "Agency Report";
     },
 
@@ -44,17 +45,39 @@ const agencyReportForm = {
                 await pageController.addContentToPage(titleComponent, true);
             },
             agencyType: async () => {
-                const data = globalState.getState().reportData || []; // Get fresh data each time
+                const data = globalState.getState().reportData || [];
                 const agencyTypes = [...new Set(data.map(item => item.agency_type))];
-
+                
                 console.log('Filtered length: ', agencyTypes.length)
+            
+                // Read filter selections from globalState
+                const state = globalState.getState();
+                const selectedAgency = state.selectedAgency || 'All';
+                const selectedBattalion = state.selectedBattalion || 'All';
+                const selectedIncident = state.selectedIncident || 'All';
+            
+                let groupBy = 'type_description'; // Default
+                // If a single incident chosen and battalion is All, then group by battalion
+                if (selectedIncident !== 'All' && selectedBattalion === 'All') {
+                    console.log('battalion')
+                    groupBy = 'battalion';
+                } else if (selectedBattalion !== 'All' && selectedIncident === 'All') {
+                    // If a single battalion chosen and incident All, group by type_description
+                    console.log('incedent')
+                    groupBy = 'type_description';
+                } else {
+                    // Any other scenario? Decide a default
+                    console.log('other')
+                    groupBy = 'battalion'; // or 'type_description' depending on your fallback logic
+                }
             
                 let agencyTypeComponent;
                 if (agencyTypes.length > 1) {
                     agencyTypeComponent = await allAgencyTypes();
                 } else if (agencyTypes.length === 1) {
                     const filteredData = globalState.getState().reportData || [];
-                    agencyTypeComponent = await singleAgencyType(filteredData, { groupBy: 'type_description' });
+                    // Now pass the dynamic groupBy
+                    agencyTypeComponent = await singleAgencyType(filteredData, { groupBy: groupBy });
                 } else {
                     console.warn('No agency data available.');
                     agencyTypeComponent = document.createElement('div');
@@ -68,7 +91,7 @@ const agencyReportForm = {
                 }
             
                 await pageController.addContentToPage(agencyTypeComponent);
-            },            
+            },           
             incidentType: async () => {
                 const incidentTypeComponent = incidentTypeChart();
                 if (!incidentTypeComponent || !(incidentTypeComponent instanceof Node)) {
@@ -260,9 +283,16 @@ async function handleApplyFilter() {
     const selectedBattalion = document.getElementById('battalionFilter').value;
     const selectedIncident = document.getElementById('incidentFilter').value;
 
+    globalState.setState({
+        selectedAgency,
+        selectedBattalion,
+        selectedIncident,
+    });
+
     const mainData = globalState.getState().mainData || [];
     let filteredData = mainData;
 
+    // Apply filters to mainData
     if (selectedAgency !== 'All') {
         filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
     }
@@ -273,14 +303,40 @@ async function handleApplyFilter() {
         filteredData = filteredData.filter(item => item.type_description === selectedIncident);
     }
 
+    // Update reportData with the newly filtered data
     globalState.setState({ reportData: filteredData });
+
+    // Decide how to group data in singleAgencyType based on the chosen filters
+    let options = {};
+    // If the user selected a single incident but all battalions, group by battalion
+    if (selectedIncident !== 'All' && selectedBattalion === 'All') {
+        options.groupBy = 'battalion';
+    } else if (selectedBattalion !== 'All' && selectedIncident === 'All') {
+        // If a single battalion is chosen and incident is 'All', show by incident type
+        options.groupBy = 'type_description';
+    } else {
+        // Default scenario (adjust as needed)
+        options.groupBy = 'battalion';
+    }
 
     const pageController = globalState.getState().pageController;
     pageController.clearContent();
 
     const orchestrator = new LoadOrchestrator(globalState.getState().selectedReportType, pageController);
+
+    // Now, how you actually call singleAgencyType depends on your workflow.
+    // If singleAgencyType is called inside initializeComponents(), you'll need to pass 'options' somehow.
+    // If you're calling singleAgencyType directly here, you can do:
+
+    // Example of direct call (if you're allowed to):
+    const agencyTypeComponent = await singleAgencyType(filteredData, options);
+    await pageController.addContentToPage(agencyTypeComponent);
+
+    // After adding the agencyType component directly, you may also re-initialize other components as needed.
+    // Or if you rely on refreshReport() to rebuild components:
     await orchestrator.refreshReport();
 }
+
 
 function setupAgencyFilterControls() {
     const menuContent = document.getElementById('menuContent');

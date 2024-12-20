@@ -845,7 +845,7 @@ button.highcharts-a11y-proxy-element {
     50% { transform: scale(1.0) }
   }
 
-  .battalion-label {
+  .battalion-label, .entry-label {
     display: flex;
     justify-content: space-between;
   }

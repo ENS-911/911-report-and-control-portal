@@ -15,10 +15,9 @@ export async function singleAgencyType(customData, options = {}) {
     console.log(customData)
     let data = customData || globalState.getState().reportData || [];
 
-    console.error('Expected data to be an array but got:', data);
-
     // Ensure data is an array
     if (!Array.isArray(data)) {
+        console.error('Expected data to be an array but got:', data);
         // data is not an array, return early with a no-data container
         const container = document.createElement('div');
         container.className = 'single-agency-type';
@@ -31,6 +30,8 @@ export async function singleAgencyType(customData, options = {}) {
 
     const groupByField = (options.groupBy === 'type_description') ? 'type_description' : 'battalion';
     const agencyName = data.length > 0 ? data[0].agency_type : 'Unknown Agency';
+
+    console.log('Group By Field:', groupByField);
 
     // Create container
     const container = document.createElement('div');
@@ -51,6 +52,8 @@ export async function singleAgencyType(customData, options = {}) {
 
     // Convert to chartData format
     const chartData = entries.map(([name, y]) => ({ name, y }));
+
+    console.log('chartData:', chartData);
 
     // Handle case when chartData is empty (no data)
     if (chartData.length === 0) {

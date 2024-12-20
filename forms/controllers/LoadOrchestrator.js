@@ -120,27 +120,25 @@ export class LoadOrchestrator {
     async fetchAndSetReportData() {
         try {
             console.log('Attempting to fetch report data...');
-            const state = globalState.getState();
-            // Remove reportType if it's not used
-            const clientKey = state.clientData?.key;
-
             const reportFilters = this.buildReportFilters();
-            console.log('Report Filters:', reportFilters); // Debug log
-
-            // Corrected the call to pass only reportFilters
+            console.log('Report Filters:', reportFilters);
+    
+            // Just fetch the raw data
             const reportData = await fetchReportData(reportFilters);
             console.log('Fetched report data:', reportData);
+    
+            // Set both mainData and reportData here
             globalState.setState({
-                reportData,
-                dataHold: reportData, // Preserve a master copy
+                mainData: reportData,
+                reportData: [...reportData] // start as full dataset
             });
-
+    
             return reportData;
         } catch (error) {
             console.error("Error fetching and setting report data:", error);
             return [];
         }
-    }
+    }    
 
     /**
      * Builds report filters based on user input.
