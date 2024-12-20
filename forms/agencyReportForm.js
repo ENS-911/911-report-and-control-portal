@@ -1,6 +1,5 @@
 // agencyReportForm.js
 
-import { fetchReportData } from '../api/fetchReportData.js'; // Adjust the path as needed
 import { globalState } from '../reactive/state.js';
 import { DateRangeSelector } from '../forms/components/DateRangeSelector.js';
 import { createTitleComponent } from '../forms/components/reportTitle.js';
@@ -9,6 +8,10 @@ import { allAgencyTypes } from '../forms/components/allAgencyTypes.js';
 import { singleAgencyType } from '../forms/components/singleAgencyType.js';
 import { incidentTypeChart } from '../forms/components/incidentTypeChart.js';
 import LoadOrchestrator from './controllers/LoadOrchestrator.js';
+
+const agencySelect = document.createElement('select');
+const battalionSelect = document.createElement('select');
+const incidentSelect = document.createElement('select');
 
 const agencyReportForm = {
     name: "Agency Report",
@@ -51,7 +54,8 @@ const agencyReportForm = {
                 if (agencyTypes.length > 1) {
                     agencyTypeComponent = await allAgencyTypes();
                 } else if (agencyTypes.length === 1) {
-                    agencyTypeComponent = await singleAgencyType(agencyTypes[0]);
+                    const filteredData = globalState.getState().reportData || [];
+                    agencyTypeComponent = await singleAgencyType(filteredData, { groupBy: 'type_description' });
                 } else {
                     console.warn('No agency data available.');
                     agencyTypeComponent = document.createElement('div');
@@ -96,6 +100,97 @@ const agencyReportForm = {
     },
 };
 
+function resetFilters() {
+    const agencyFilter = document.getElementById('agencyFilter');
+    const battalionFilter = document.getElementById('battalionFilter');
+    const incidentFilter = document.getElementById('incidentFilter');
+
+    // If these elements exist, reset them
+    if (agencyFilter) agencyFilter.value = 'All';
+    if (battalionFilter) battalionFilter.value = 'All';
+    if (incidentFilter) incidentFilter.value = 'All';
+
+    // Also re-populate them if needed
+    populateAgencyDropdown();
+    //populateBattalionAndIncidentDropdowns();
+}
+
+// Functions to populate dropdowns
+function populateAgencyDropdown() {
+    const reportData = globalState.getState().reportData || [];
+    const uniqueAgencyTypes = [...new Set(reportData.map(item => item.agency_type))];
+
+    agencySelect.innerHTML = ''; // Clear existing options
+    addAllOption(agencySelect);
+
+    uniqueAgencyTypes.forEach((agencyType) => {
+        const option = document.createElement('option');
+        option.value = agencyType;
+        option.textContent = agencyType;
+        agencySelect.appendChild(option);
+    });
+
+    // Trigger initial population of next dropdowns
+    populateBattalionAndIncidentDropdowns();
+}
+
+function populateBattalionAndIncidentDropdowns() {
+    const reportData = globalState.getState().reportData || [];
+    const selectedAgency = agencySelect.value;
+    let filteredData = reportData;
+
+    if (selectedAgency !== 'All') {
+        filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
+    }
+
+    // Populate Battalion
+    const uniqueBattalions = [...new Set(filteredData.map(item => item.battalion))].filter(b => b);
+    battalionSelect.innerHTML = '';
+    addAllOption(battalionSelect);
+
+    uniqueBattalions.forEach(b => {
+        const option = document.createElement('option');
+        option.value = b;
+        option.textContent = b;
+        battalionSelect.appendChild(option);
+    });
+
+    // After updating battalion, update incident
+    populateIncidentDropdown();
+}
+
+function populateIncidentDropdown() {
+    const reportData = globalState.getState().reportData || [];
+    const selectedAgency = agencySelect.value;
+    const selectedBattalion = battalionSelect.value;
+    let filteredData = reportData;
+
+    if (selectedAgency !== 'All') {
+        filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
+    }
+    if (selectedBattalion !== 'All') {
+        filteredData = filteredData.filter(item => item.battalion === selectedBattalion);
+    }
+
+    const uniqueIncidents = [...new Set(filteredData.map(item => item.type_description))].filter(i => i);
+    incidentSelect.innerHTML = '';
+    addAllOption(incidentSelect);
+
+    uniqueIncidents.forEach(i => {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        incidentSelect.appendChild(option);
+    });
+}
+
+function addAllOption(selectElement) {
+    const allOption = document.createElement('option');
+    allOption.value = 'All';
+    allOption.textContent = 'All';
+    selectElement.appendChild(allOption);
+}
+
 // Register the template with LoadOrchestrator
 LoadOrchestrator.registerTemplate('agencyReport', agencyReportForm);
 
@@ -118,8 +213,7 @@ async function onRangeSelect(selectedRange, customData) {
     const fetchButton = document.getElementById('fetchReportData');
     fetchButton.disabled = true; // Disable the button to prevent multiple clicks
     try {
-        console.log(`Selected Range: ${selectedRange}`, customData);
-        displayLoadingMessage(); // Show loading indicator
+        displayLoadingMessage();
 
         const reportFilters = {
             dateRange: selectedRange,
@@ -139,10 +233,9 @@ async function onRangeSelect(selectedRange, customData) {
         const orchestrator = new LoadOrchestrator('agencyReport', pageController);
         await orchestrator.orchestrateLoad(); // Orchestrate the loading process
 
-        // After orchestrateLoad finishes and the report pages are rendered:
-        setupAgencyFilterControls(); // Reintroduce this call
-
-        removeLoadingMessage(); // Remove loading indicator after data is loaded
+        setupAgencyFilterControls();
+        removeLoadingMessage();
+        resetFilters();
 
     } catch (error) {
         console.error('Error in onRangeSelect:', error);
@@ -153,11 +246,7 @@ async function onRangeSelect(selectedRange, customData) {
     }
 }
 
-/**
- * Handles the "Apply Filter" button click
- */
 async function handleApplyFilter() {
-    // Only read these elements now, when the user actually clicks "Apply Filter"
     const selectedAgency = document.getElementById('agencyFilter').value;
     const selectedBattalion = document.getElementById('battalionFilter').value;
     const selectedIncident = document.getElementById('incidentFilter').value;
@@ -168,33 +257,21 @@ async function handleApplyFilter() {
     if (selectedAgency !== 'All') {
         filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
     }
-
     if (selectedBattalion !== 'All') {
         filteredData = filteredData.filter(item => item.battalion === selectedBattalion);
     }
-
     if (selectedIncident !== 'All') {
         filteredData = filteredData.filter(item => item.type_description === selectedIncident);
     }
+    globalState.setState({ reportData: filteredData });
 
-    if (filteredData.length > 0) {
-        globalState.setState({ reportData: filteredData });
-        console.log("Filtered report data:", filteredData);
+    const pageController = globalState.getState().pageController;
+    pageController.clearContent();
 
-        const pageController = globalState.getState().pageController;
-        pageController.clearContent();
-
-        const orchestrator = new LoadOrchestrator(globalState.getState().selectedReportType, pageController);
-        await orchestrator.refreshReport(); // or initializeComponents if needed
-    } else {
-        console.warn('No data matches the selected filters.');
-        displayNoFilteredDataMessage();
-    }
+    const orchestrator = new LoadOrchestrator(globalState.getState().selectedReportType, pageController);
+    await orchestrator.refreshReport();
 }
 
-/**
- * Sets up the agency filter controls after report rendering
- */
 function setupAgencyFilterControls() {
     const menuContent = document.getElementById('menuContent');
 
@@ -235,7 +312,6 @@ function setupAgencyFilterControls() {
     agencyLabel.style.marginBottom = '5px';
     filterContainer.appendChild(agencyLabel);
 
-    const agencySelect = document.createElement('select');
     agencySelect.id = 'agencyFilter';
     filterContainer.appendChild(agencySelect);
 
@@ -247,7 +323,6 @@ function setupAgencyFilterControls() {
     battalionLabel.style.marginBottom = '5px';
     filterContainer.appendChild(battalionLabel);
 
-    const battalionSelect = document.createElement('select');
     battalionSelect.id = 'battalionFilter';
     filterContainer.appendChild(battalionSelect);
 
@@ -259,7 +334,6 @@ function setupAgencyFilterControls() {
     incidentLabel.style.marginBottom = '5px';
     filterContainer.appendChild(incidentLabel);
 
-    const incidentSelect = document.createElement('select');
     incidentSelect.id = 'incidentFilter';
     filterContainer.appendChild(incidentSelect);
 
@@ -285,96 +359,8 @@ function setupAgencyFilterControls() {
     battalionSelect.addEventListener('change', () => {
         populateIncidentDropdown();
     });
-
-    // Functions to populate dropdowns
-    function populateAgencyDropdown() {
-        const reportData = globalState.getState().reportData || [];
-        const uniqueAgencyTypes = [...new Set(reportData.map(item => item.agency_type))];
-
-        agencySelect.innerHTML = ''; // Clear existing options
-        addAllOption(agencySelect);
-
-        uniqueAgencyTypes.forEach((agencyType) => {
-            const option = document.createElement('option');
-            option.value = agencyType;
-            option.textContent = agencyType;
-            agencySelect.appendChild(option);
-        });
-
-        // Trigger initial population of next dropdowns
-        populateBattalionAndIncidentDropdowns();
-    }
-
-    function populateBattalionAndIncidentDropdowns() {
-        const reportData = globalState.getState().reportData || [];
-        const selectedAgency = agencySelect.value;
-        let filteredData = reportData;
-
-        if (selectedAgency !== 'All') {
-            filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
-        }
-
-        // Populate Battalion
-        const uniqueBattalions = [...new Set(filteredData.map(item => item.battalion))].filter(b => b);
-        battalionSelect.innerHTML = '';
-        addAllOption(battalionSelect);
-
-        uniqueBattalions.forEach(b => {
-            const option = document.createElement('option');
-            option.value = b;
-            option.textContent = b;
-            battalionSelect.appendChild(option);
-        });
-
-        // After updating battalion, update incident
-        populateIncidentDropdown();
-    }
-
-    function populateIncidentDropdown() {
-        const reportData = globalState.getState().reportData || [];
-        const selectedAgency = agencySelect.value;
-        const selectedBattalion = battalionSelect.value;
-        let filteredData = reportData;
-
-        if (selectedAgency !== 'All') {
-            filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
-        }
-        if (selectedBattalion !== 'All') {
-            filteredData = filteredData.filter(item => item.battalion === selectedBattalion);
-        }
-
-        const uniqueIncidents = [...new Set(filteredData.map(item => item.type_description))].filter(i => i);
-        incidentSelect.innerHTML = '';
-        addAllOption(incidentSelect);
-
-        uniqueIncidents.forEach(i => {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = i;
-            incidentSelect.appendChild(option);
-        });
-    }
-
-    function addAllOption(selectElement) {
-        const allOption = document.createElement('option');
-        allOption.value = 'All';
-        allOption.textContent = 'All';
-        selectElement.appendChild(allOption);
-    }
 }
 
-/**
- * Utility function to get selected agency
- * @returns {string} Selected agency or 'All'
- */
-function getSelectedAgency() {
-    const dropdown = document.getElementById('agencyFilter');
-    return dropdown ? dropdown.value : 'All';
-}
-
-/**
- * Utility function to display loading message
- */
 function displayLoadingMessage() {
     // Check if the overlay already exists to prevent duplicates
     if (document.getElementById('loadingOverlay')) return;
@@ -416,9 +402,6 @@ function displayLoadingMessage() {
     document.body.style.overflow = 'hidden';
 }
 
-/**
- * Removes the loading overlay from the DOM
- */
 function removeLoadingMessage() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
@@ -426,16 +409,6 @@ function removeLoadingMessage() {
     }
     // Restore scrolling
     document.body.style.overflow = 'auto';
-}
-
-/**
- * Utility function to display no filtered data message
- */
-function displayNoFilteredDataMessage() {
-    const reportContainer = document.getElementById('contentBody');
-    if (reportContainer) {
-        reportContainer.innerHTML = '<p>No data available for the selected filter.</p>';
-    }
 }
 
 /**

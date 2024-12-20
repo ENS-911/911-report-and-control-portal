@@ -1,7 +1,6 @@
 // reportBuilder.js
 import { globalState } from '../reactive/state.js';
 import { ReportTypeSelector } from '../forms/components/ReportTypeSelector.js';
-import agencyReportForm from '../forms/agencyReportForm.js'; // Import the form
 
 export function loadPage() {
     const menuContent = document.getElementById('menuContent');
