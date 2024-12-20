@@ -113,10 +113,6 @@ export async function singleAgencyType(customData, options = {}) {
     container.appendChild(chartContainer);
     container.appendChild(labelContainer);
 
-    // Log for debugging
-    console.log('chartData:', chartData);
-    console.log('counts:', counts);
-
     // Wait for the chart to render before returning the container
     await new Promise((resolve) => {
         try {

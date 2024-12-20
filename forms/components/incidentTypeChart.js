@@ -41,10 +41,7 @@ export function incidentTypeChart(customData, options = {}) {
     const chartContainer = document.createElement('div');
     chartContainer.className = 'highcharts-container';
     container.appendChild(chartContainer);
-
-    console.log('chartData:', chartData);
-    console.log('counts:', counts);
-
+    
     try {
         Highcharts.chart(chartContainer, {
             chart: {

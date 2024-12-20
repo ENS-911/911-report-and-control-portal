@@ -21,8 +21,6 @@ class PageController {
         this.availableSpace = this.maxPageHeight - this.footerHeight - this.padding; // Usable space per page
         this.usedSpaceOnPage = 0; // Tracks used space on the current page
 
-        console.log(`PageController Initialized with maxPageHeight: ${this.maxPageHeight}px, footerHeight: ${this.footerHeight}px, availableSpace: ${this.availableSpace}px`);
-
         this.contentBody = document.getElementById('contentBody'); // Container for all pages
         if (!this.contentBody) {
             console.error('#contentBody not found. Ensure that it exists in the DOM.');
@@ -81,7 +79,6 @@ class PageController {
 
         // Append the component to the content container
         contentContainer.appendChild(component);
-        console.log(`Component appended to current page (${this.pages.length}).`);
 
         // Wait for rendering to ensure accurate measurements
         await this.waitForRender();
@@ -89,15 +86,12 @@ class PageController {
 
         // Measure the component's height
         const componentHeight = component.getBoundingClientRect().height;
-        console.log(`Measured height for component (${component.className || component.tagName}): ${componentHeight}px`);
 
         // Check if adding this component exceeds available space
         if (this.usedSpaceOnPage + componentHeight > this.availableSpace) {
-            console.log(`Component height (${componentHeight}px) exceeds available space (${this.availableSpace - this.usedSpaceOnPage}px) on current page. Moving to new page.`);
 
             // Remove the component from the current page
             contentContainer.removeChild(component);
-            console.log(`Component removed from current page (${this.pages.length}).`);
 
             // Finalize the current page by adding a footer
             this.addFooter(this.pages[this.pages.length - 1], this.pages.length);
@@ -114,27 +108,18 @@ class PageController {
 
             // Add the component to the new page
             newContentContainer.appendChild(component);
-            console.log(`Component moved to new page (${this.pages.length}).`);
 
             // Wait for rendering again
             await this.waitForRender();
             await this.waitForRender();
 
             const newComponentHeight = component.getBoundingClientRect().height;
-            console.log(`Component added to new page with height: ${newComponentHeight}px`);
 
             // Update used space on the new page
             this.addHeightToCurrentPage(newComponentHeight);
-
-            if (newComponentHeight > this.availableSpace) {
-                console.warn(`Component itself is larger than a single page (${newComponentHeight}px > ${this.availableSpace}px). Consider splitting it.`);
-            } else {
-                console.log(`Component added to new page (${this.pages.length}). Used space: ${this.usedSpaceOnPage}px of ${this.availableSpace}px`);
-            }
         } else {
             // Fits on the current page
             this.usedSpaceOnPage += componentHeight;
-            console.log(`Component added to current page (${this.pages.length}). Used space: ${this.usedSpaceOnPage}px of ${this.availableSpace}px`);
         }
     }
 
@@ -160,8 +145,6 @@ class PageController {
 
         // Append the footer to the footer container
         footerContainer.appendChild(footer);
-
-        console.log(`Footer added to page ${pageNumber} of ${this.pages.length}.`);
     }
 
     /**
@@ -179,7 +162,6 @@ class PageController {
                 this.addFooter(page, index + 1);
             }
         });
-        console.log("All pages finalized with footers.");
         return this.pages; // Return the pages array
     }
 
@@ -200,7 +182,6 @@ class PageController {
      * Typically called before generating a new report.
      */
     clearContent() {
-        console.log('Called clearContent: Resetting pages and used space.');
         // Remove all existing pages from the DOM
         this.pages.forEach(page => {
             if (this.contentBody.contains(page)) {
@@ -213,7 +194,6 @@ class PageController {
         this.usedSpaceOnPage = 0;
         // Create a new page
         this.currentPage = this.createNewPage();
-        console.log('Initialized a new page after clearing content.');
     }
 
     /**
@@ -223,7 +203,6 @@ class PageController {
         const newPage = this.createNewPage();
         this.currentPage = newPage;
         this.usedSpaceOnPage = 0;
-        console.log(`New page created. Total pages: ${this.pages.length}`);
     }
 
     /**
@@ -232,7 +211,6 @@ class PageController {
      */
     addHeightToCurrentPage(height) {
         this.usedSpaceOnPage += height;
-        console.log(`Added height ${height}px to current page. Total used space: ${this.usedSpaceOnPage}px of ${this.availableSpace}px`);
     }
 
     /**

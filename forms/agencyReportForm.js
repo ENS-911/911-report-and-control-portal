@@ -27,7 +27,6 @@ const agencyReportForm = {
      * @param {PageController} pageController - The controller to manage page content.
      */
     async initializeComponents(pageController) {
-        console.log('Initializing all components with data:', globalState.getState().reportData);
         if (!pageController) {
             console.error('PageController is undefined in initializeComponents.');
             return;
@@ -91,7 +90,6 @@ const agencyReportForm = {
 
         for (const componentName of this.components) {
             if (components[componentName]) {
-                console.log(`Initializing component: ${componentName}`);
                 await components[componentName](); // Properly await the async function
             } else {
                 console.warn(`Component ${componentName} is not registered.`);
@@ -99,20 +97,31 @@ const agencyReportForm = {
         }
     },
 };
-
 function resetFilters() {
+    console.log('Resetting filters...');
     const agencyFilter = document.getElementById('agencyFilter');
     const battalionFilter = document.getElementById('battalionFilter');
     const incidentFilter = document.getElementById('incidentFilter');
 
-    // If these elements exist, reset them
-    if (agencyFilter) agencyFilter.value = 'All';
-    if (battalionFilter) battalionFilter.value = 'All';
-    if (incidentFilter) incidentFilter.value = 'All';
+    if (agencyFilter) {
+        agencyFilter.value = 'All';
+    } else {
+        console.warn('agencyFilter not found during reset');
+    }
 
-    // Also re-populate them if needed
-    populateAgencyDropdown();
-    //populateBattalionAndIncidentDropdowns();
+    if (battalionFilter) {
+        battalionFilter.value = 'All';
+    } else {
+        console.warn('battalionFilter not found during reset');
+    }
+
+    if (incidentFilter) {
+        incidentFilter.value = 'All';
+    } else {
+        console.warn('incidentFilter not found during reset');
+    }
+
+    populateAgencyDropdown(); // Check if this logs and runs successfully
 }
 
 // Functions to populate dropdowns
@@ -251,8 +260,8 @@ async function handleApplyFilter() {
     const selectedBattalion = document.getElementById('battalionFilter').value;
     const selectedIncident = document.getElementById('incidentFilter').value;
 
-    const dataHold = globalState.getState().mainData || [];
-    let filteredData = dataHold;
+    const mainData = globalState.getState().mainData || [];
+    let filteredData = mainData;
 
     if (selectedAgency !== 'All') {
         filteredData = filteredData.filter(item => item.agency_type === selectedAgency);
@@ -263,6 +272,7 @@ async function handleApplyFilter() {
     if (selectedIncident !== 'All') {
         filteredData = filteredData.filter(item => item.type_description === selectedIncident);
     }
+
     globalState.setState({ reportData: filteredData });
 
     const pageController = globalState.getState().pageController;
