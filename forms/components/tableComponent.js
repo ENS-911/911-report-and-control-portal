@@ -88,7 +88,7 @@ export async function createTableComponent(pageController) {
 
         // Wait for render to measure the row's height
         await pageController.waitForRender();
-        await pageController.waitForRender();
+        //await pageController.waitForRender();
 
         const rowHeight = row.getBoundingClientRect().height;
 
@@ -106,7 +106,7 @@ export async function createTableComponent(pageController) {
 
             // Wait for render
             await pageController.waitForRender();
-            await pageController.waitForRender();
+            //await pageController.waitForRender();
 
             const newRowHeight = row.getBoundingClientRect().height;
 

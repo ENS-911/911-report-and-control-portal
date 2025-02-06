@@ -1,6 +1,8 @@
 // formUtils/loadingScreen.js
 
 export function showLoadingScreen() {
+    console.log('load screen on')
+
     const contentBody = document.getElementById('contentBody');
     const loadingScreen = document.createElement('div');
     loadingScreen.id = 'loadingScreen';
@@ -22,6 +24,7 @@ export function showLoadingScreen() {
 }
 
 export function removeLoadingScreen() {
+    console.log('load screen off')
     const loadingScreen = document.getElementById('loadingScreen');
     if (loadingScreen) {
         loadingScreen.remove();
