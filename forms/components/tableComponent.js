@@ -3,12 +3,15 @@
 import { globalState } from "../../reactive/state.js";
 
 /**
- * Creates and returns a table component, splitting it into multiple tables if necessary.
+ * Creates and returns a table component using a single row-height measurement
+ * for pagination instead of measuring each row individually.
+ *
  * @param {PageController} pageController - The PageController instance for managing pages.
  */
 export async function createTableComponent(pageController) {
     const data = globalState.getState().reportData || [];
 
+    // If there's no data, display a simple message.
     if (!Array.isArray(data) || data.length === 0) {
         const emptyContainer = document.createElement('div');
         emptyContainer.className = 'report-table empty';
@@ -17,10 +20,10 @@ export async function createTableComponent(pageController) {
         return;
     }
 
-    // Define column widths (ensure they sum up to 100%)
+    // Define column widths (ensure they sum to 100%)
     const columnWidths = ['15%', '15%', '20%', '30%', '20%'];
 
-    // Create the table header element
+    // Create header for each table
     function createHeader() {
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
@@ -48,12 +51,15 @@ export async function createTableComponent(pageController) {
         return colgroup;
     }
 
-    // Function to start a new table with colgroup, header, and tbody
+    /**
+     * Creates a new table (with colgroup and header) and appends it to the current page.
+     * Returns the <tbody> so we can add rows to it.
+     */
     async function startNewTable() {
         const table = document.createElement('table');
         table.classList.add('report-table');
-        table.style.width = '100%'; // Ensure inline style for 100% width
-        table.style.tableLayout = 'fixed'; // Ensure fixed table layout
+        table.style.width = '100%';
+        table.style.tableLayout = 'fixed'; // Ensure fixed layout for uniform columns
 
         // Append colgroup and header
         table.appendChild(createColGroup());
@@ -62,59 +68,76 @@ export async function createTableComponent(pageController) {
         const tbody = document.createElement('tbody');
         table.appendChild(tbody);
 
-        await pageController.addContentToPage(table); // Adds the complete table to the page
+        // Add this table to the current page
+        await pageController.addContentToPage(table);
         console.log("Started new table with header.");
         return tbody;
     }
 
-    let tbody = await startNewTable(); // Start with the first table
+    // Start our first table
+    let tbody = await startNewTable();
 
-    // Iterate through each row of data and measure each dynamically
-    for (let index = 0; index < data.length; index++) {
+    // ----------------------------------------------------------------------
+    // STEP 1: Measure the FIRST row to determine rowHeight for all other rows
+    // ----------------------------------------------------------------------
+    const firstItem = data[0];
+    const firstRow = document.createElement('tr');
+
+    populateRow(firstRow, firstItem);
+    tbody.appendChild(firstRow);
+
+    // Wait for the row to render to measure its height
+    await pageController.waitForRender();
+    await pageController.waitForRender();
+
+    const firstRowHeight = firstRow.getBoundingClientRect().height;
+    console.log('Measured first-row height:', firstRowHeight);
+
+    // Track used space for this first row
+    pageController.addHeightToCurrentPage(firstRowHeight);
+
+    // ----------------------------------------------------------------------
+    // STEP 2: Add the remaining rows using the same rowHeight
+    // ----------------------------------------------------------------------
+    for (let index = 1; index < data.length; index++) {
         const item = data[index];
         const row = document.createElement('tr');
+        populateRow(row, item);
 
-        // Populate row cells
-        ['agency_type', 'battalion', 'creation', 'premise', 'type_description'].forEach((field) => {
-            const cell = document.createElement('td');
-            cell.textContent = field === 'creation'
-                ? new Date(item[field]).toLocaleString()
-                : item[field];
-            row.appendChild(cell);
-        });
+        // Check if adding another row would exceed available space
+        if (pageController.getUsedSpaceOnPage() + firstRowHeight > pageController.getAvailableSpace()) {
+            // Remove the row from the current table
+            // (We haven't appended it yet, so no need to remove it)
+            // Start a new page
+            await pageController.startNewPage();
+            // Create a new table
+            tbody = await startNewTable();
+            // The used space on the new page is reset, so we track from 0 again
+        }
 
-        // Append the row to the current table's tbody
+        // Now we can append the row to the current table
         tbody.appendChild(row);
 
-        // Wait for render to measure the row's height
-        await pageController.waitForRender();
-        //await pageController.waitForRender();
-
-        const rowHeight = row.getBoundingClientRect().height;
-
-        // Check if adding this row exceeds the available space on the current page
-        if (pageController.getUsedSpaceOnPage() + rowHeight > pageController.getAvailableSpace()) {
-            // Remove the row from the current table
-            tbody.removeChild(row);
-
-            // Start a new page and a new table
-            await pageController.startNewPage();
-            tbody = await startNewTable();
-
-            // Add the row to the new table's tbody
-            tbody.appendChild(row);
-
-            // Wait for render
-            await pageController.waitForRender();
-            //await pageController.waitForRender();
-
-            const newRowHeight = row.getBoundingClientRect().height;
-
-            // Update the usedSpaceOnPage in PageController
-            pageController.addHeightToCurrentPage(newRowHeight);
-        } else {
-            // Fits on the current page, update usedSpaceOnPage
-            pageController.addHeightToCurrentPage(rowHeight);
-        }
+        // Instead of measuring row, reuse firstRowHeight
+        pageController.addHeightToCurrentPage(firstRowHeight);
     }
+
+    console.log("Completed table rendering with single-row height approach.");
+}
+
+/**
+ * Populates a <tr> with cells based on the given item fields.
+ * Adjust the keys as needed for your data structure.
+ */
+function populateRow(row, item) {
+    const fields = ['agency_type', 'battalion', 'creation', 'premise', 'type_description'];
+    fields.forEach((field) => {
+        const cell = document.createElement('td');
+        if (field === 'creation') {
+            cell.textContent = new Date(item[field]).toLocaleString();
+        } else {
+            cell.textContent = item[field];
+        }
+        row.appendChild(cell);
+    });
 }
