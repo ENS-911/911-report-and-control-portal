@@ -5,7 +5,7 @@ const routeConfig = {
   home: { module: 'home', title: 'Home' },
   reports: { module: 'reports', title: 'Reports' },
   reportBuilder: { module: 'reportBuilder', title: 'Report Builder' },
-  page2: { module: 'page2', title: 'Page 2' },
+  editPublicFeed: { module: 'editPublicFeed', title: 'Edit Public Feed' },
 };
 
 function updatePageTitle(newTitle) {

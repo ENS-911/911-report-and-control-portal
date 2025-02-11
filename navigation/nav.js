@@ -31,6 +31,7 @@ function getLinksByPermission(permissionLevel) {
     { href: 'home', text: 'Home' },
     { href: 'reports', text: 'Reports' },
     { href: 'reportBuilder', text: 'Report Builder' },
+    { href: 'editPublicFeed', text: 'Edit Public Feed' },
   ];
 
   if (permissionLevel === 'admin') {
