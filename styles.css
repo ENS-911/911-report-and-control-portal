@@ -849,3 +849,50 @@ button.highcharts-a11y-proxy-element {
     display: flex;
     justify-content: space-between;
   }
+
+  .removeWrap {
+    width: 100%;
+  }
+
+  .removeHead {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    border-bottom: 3px solid #1C5B91;
+    padding: 5px 0;
+  }
+
+  #filterControls {
+    font-size: 2rem;
+  }
+
+  .activeTitle {
+    border-bottom: 3px solid #1C5B91;
+    padding: 5px 0;
+    text-align: center;
+  }
+
+  .activeTitle h3 {
+    font-size: 2.2rem;
+  }
+
+  .activeList {
+    width: 100%;
+    padding: 10px 40px;
+  }
+
+  .activeList ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .activeList ul li {
+    width: 18%;
+    background-color: #e2e2e2;
+    padding: 5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.5rem;
+  }
