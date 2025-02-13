@@ -28,7 +28,7 @@ export function loadPage() {
         </div>
       </div>
       <div class="activeTitle">
-        <h3>Active Filters</h3>
+        <h3>Active Removal Filters</h3>
       </div>
       <div class="activeList">
         <ul id="filterList"></ul>
@@ -36,11 +36,45 @@ export function loadPage() {
     </div>
   `;
 
+  setStage.innerHTML += `
+  <div class="replaceWrap">
+    <div class="replaceHead">
+      <div id="replaceControls">
+        <label for="replaceColumnSelect">Replace Data In:</label>
+        <select id="replaceColumnSelect"></select>
+
+        <label for="replaceValueSelect">With Value = To:</label>
+        <select id="replaceValueSelect"></select>
+
+        <input type="text" id="replaceCustomValue" placeholder="Enter custom value" style="display:none;">
+
+        <label for="replaceWith">Replace With:</label>
+        <input type="text" id="replaceWith" placeholder="New value">
+
+        <button id="saveReplace">Save Replacement</button>
+      </div>
+    </div>
+    <div class="activeTitle">
+      <h3>Active Replacements</h3>
+    </div>
+    <div class="activeList">
+      <ul id="replaceList"></ul>
+    </div>
+  </div>
+`;
+
+
   loadColumns();
   loadSavedFilters();
+  loadSavedReplacements()
 
   document.getElementById('columnSelect').addEventListener('change', function () {
-    loadValues(this.value);
+    loadValues(this.value, 'valueSelect');
+  });
+
+  document.getElementById('replaceColumnSelect').addEventListener('change', function () {
+    const selectedColumn = this.value;
+    loadValues(selectedColumn, 'replaceValueSelect'); // Populate replacement values
   });
 
   document.getElementById('valueSelect').addEventListener('change', function () {
@@ -51,6 +85,21 @@ export function loadPage() {
     console.log('Save Filter button clicked');
     saveFilter();
   });
+
+  document.getElementById('saveReplace').addEventListener('click', function () {
+    console.log("Save Replacement Clicked"); // Debugging log
+    saveReplacement();
+  });
+
+  document.getElementById('replaceValueSelect').addEventListener('change', function () {
+    const customInput = document.getElementById('replaceCustomValue');
+    if (this.value === 'not_in_list') {
+      customInput.style.display = 'inline-block';  // Show input field
+    } else {
+      customInput.style.display = 'none';  // Hide input field
+      customInput.value = '';  // Reset value when not needed
+    }
+  });
 }
 
 function loadColumns() {
@@ -58,39 +107,69 @@ function loadColumns() {
     .then(response => response.json())
     .then(data => {
       const columnSelect = document.getElementById('columnSelect');
-      columnSelect.innerHTML = ''; // Clear existing options before adding
+      const replaceColumnSelect = document.getElementById('replaceColumnSelect');
 
-      // Sort columns alphabetically (case-insensitive)
-      data.columns.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+      if (!columnSelect || !replaceColumnSelect) {
+        console.error('Dropdown elements not found');
+        return;
+      }
+
+      columnSelect.innerHTML = ''; // Clear existing options
+      replaceColumnSelect.innerHTML = ''; // Clear existing options
+
+      // Add placeholder option
+      const placeholderOption = new Option('--- Select Category ---', '', true, true);
+      placeholderOption.disabled = true;
+      columnSelect.add(placeholderOption);
+      
+      const placeholderReplaceOption = new Option('--- Select Category ---', '', true, true);
+      placeholderReplaceOption.disabled = true;
+      replaceColumnSelect.add(placeholderReplaceOption);
+
+      console.log('Received columns:', data.columns); // Debugging log
+
+      // Sort columns alphabetically and populate both dropdowns
+      data.columns
+        .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
         .forEach(col => {
           if (col !== 'ID') {
-            const option = new Option(col, col);
-            columnSelect.add(option);
+            columnSelect.add(new Option(col, col));
+            replaceColumnSelect.add(new Option(col, col));
           }
         });
     })
     .catch(error => console.error('Error loading columns:', error));
 }
 
-function loadValues(column) {
+function loadValues(column, targetDropdownId) {
+  if (!column) return; // Exit if no column is selected
+
   fetch(`https://matrix.911-ens-services.com/api/get-values/${userData.key}?column=${column}`)
     .then(response => response.json())
     .then(data => {
-      const valueSelect = document.getElementById('valueSelect');
-      valueSelect.innerHTML = ''; // Clear existing options before adding
+      const targetDropdown = document.getElementById(targetDropdownId);
 
-      // Sort values alphabetically (case-insensitive)
-      data.values.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+      if (!targetDropdown) {
+        console.error(`Dropdown element with ID ${targetDropdownId} not found`);
+        return;
+      }
+
+      targetDropdown.innerHTML = ''; // Clear existing options
+
+      console.log(`Received values for column ${column}:`, data.values); // Debugging log
+
+      // Sort values alphabetically and populate the dropdown
+      data.values
+        .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
         .forEach(value => {
-          const option = new Option(value, value);
-          valueSelect.add(option);
+          targetDropdown.add(new Option(value, value));
         });
 
-      // Add 'Not in List' option at the end
+      // Add "Not in List" option for manual input
       const customOption = new Option('Not in List', 'not_in_list');
-      valueSelect.add(customOption);
+      targetDropdown.add(customOption);
     })
-    .catch(error => console.error('Error loading values:', error));
+    .catch(error => console.error(`Error loading values for column ${column}:`, error));
 }
 
 function toggleCustomInput(value) {
@@ -195,4 +274,106 @@ function removeFilter(conditionToRemove) {
 
   // Refresh the display
   displayFilters();
+}
+
+let replacementRules = [];
+
+function saveReplacement() {
+  const column = document.getElementById('replaceColumnSelect').value;
+  const valueSelect = document.getElementById('replaceValueSelect').value;
+  const customValue = document.getElementById('replaceCustomValue').value.trim();
+  const replaceWith = document.getElementById('replaceWith').value.trim();
+
+  if (!column || column.trim() === '') {
+    console.error('Invalid column selection');
+    return;
+  }
+
+  if ((valueSelect === 'not_in_list' && !customValue) || (!valueSelect && !customValue)) {
+    console.error('Invalid replacement values');
+    return;
+  }
+
+  if (!replaceWith) {
+    console.error('Replacement value is required');
+    return;
+  }
+
+  // Use the custom input if "Not in List" is selected
+  const finalValue = valueSelect === 'not_in_list' ? customValue : valueSelect;
+
+  const newRule = { column, value: finalValue, replaceWith };
+
+  // Avoid duplicate replacement rules
+  if (!replacementRules.some(rule => JSON.stringify(rule) === JSON.stringify(newRule))) {
+    replacementRules.push(newRule);
+  }
+
+  console.log('Built Replacement Rules:', replacementRules);
+
+  // Send updated rules to the backend
+  updateReplacementOnServer(replacementRules);
+
+  // Refresh the UI
+  displayReplacements();
+}
+
+function displayReplacements() {
+  const replaceList = document.getElementById('replaceList');
+  replaceList.innerHTML = '';
+
+  replacementRules.forEach(rule => {
+    const li = document.createElement('li');
+    li.textContent = `${rule.column}: ${rule.value} → ${rule.replaceWith}`;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = 'X';
+    removeBtn.onclick = () => removeReplacement(rule);
+
+    li.appendChild(removeBtn);
+    replaceList.appendChild(li);
+  });
+}
+
+function removeReplacement(ruleToRemove) {
+  replacementRules = replacementRules.filter(rule => 
+    !(rule.column === ruleToRemove.column && rule.value === ruleToRemove.value && rule.replaceWith === ruleToRemove.replaceWith)
+  );
+
+  console.log('Updated Replacement Rules:', replacementRules);
+
+  // Update backend with the new list
+  updateReplacementOnServer(replacementRules);
+
+  // Refresh UI
+  displayReplacements();
+}
+
+function loadSavedReplacements() {
+  fetch(`https://matrix.911-ens-services.com/api/get-replacement-rules/${userData.key}`)
+    .then(response => response.json())
+    .then(data => {
+      replacementRules = data.replacementRules || [];
+      console.log('Loaded Saved Replacement Rules:', replacementRules);
+      displayReplacements();
+    })
+    .catch(error => console.error('Error loading saved replacements:', error));
+}
+
+function updateReplacementOnServer(rules) {
+  fetch(`https://matrix.911-ens-services.com/api/save-replacement/${userData.key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ replacementRules: rules }),
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to save replacement rules');
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Replacement rules saved successfully:', data);
+  })
+  .catch(error => console.error('Error saving replacement rules:', error));
 }

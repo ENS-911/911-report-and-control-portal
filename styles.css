@@ -850,11 +850,12 @@ button.highcharts-a11y-proxy-element {
     justify-content: space-between;
   }
 
-  .removeWrap {
+  .removeWrap, .replaceWrap {
     width: 100%;
+    margin-top: 15px;
   }
 
-  .removeHead {
+  .removeHead, .replaceHead {
     display: flex;
     width: 100%;
     justify-content: center;
@@ -862,9 +863,43 @@ button.highcharts-a11y-proxy-element {
     padding: 5px 0;
   }
 
-  #filterControls {
+  #filterControls, #replaceControls {
+    width: 100%;
+    margin: 0 auto;
+    font-size: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  #filterControls select, #replaceControls select {
+    padding: 5px 0;
     font-size: 2rem;
   }
+
+  #filterControls input, #replaceControls input {
+    padding: 5px 0;
+    font-size: 2rem;
+  }
+
+  #filterControls button, #replaceControls button {
+    padding: 10px;
+    font-size: 2rem;
+    border-radius: 12px;
+    background-color: #143D6A;
+    color: white;
+    font-weight: bold;
+    border: 1px solid #FFFFFF95;
+    box-shadow: 2px 4px 12px #000000BB;
+    transition: all 0.2s ease-in-out;
+}
+
+#filterControls button:hover, #replaceControls button:hover {
+    background-color: #1A4C85; /* Slightly lighter blue */
+    text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.8); /* Subtle glow effect */
+    box-shadow: 2px 2px 8px #00000099; /* Slightly reduced shadow for a dropped effect */
+    transform: translateY(2px); /* Lowers the button slightly */
+}
 
   .activeTitle {
     border-bottom: 3px solid #1C5B91;
@@ -874,11 +909,14 @@ button.highcharts-a11y-proxy-element {
 
   .activeTitle h3 {
     font-size: 2.2rem;
+    background-color: #143D6A;
+    color: #FFFFFF;
   }
 
   .activeList {
     width: 100%;
     padding: 10px 40px;
+    border-bottom: 3px solid #1C5B91;
   }
 
   .activeList ul {
@@ -895,4 +933,13 @@ button.highcharts-a11y-proxy-element {
     display: flex;
     justify-content: space-between;
     font-size: 1.5rem;
+  }
+
+  .activeList ul li button {
+    padding: 6px;
+    border-radius: 90%;
+    border: 1px solid #000000;
+    background-color: rgb(161, 21, 21);
+    color: #FFFFFF;
+    font-weight: bold;
   }
