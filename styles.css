@@ -943,3 +943,9 @@ button.highcharts-a11y-proxy-element {
     color: #FFFFFF;
     font-weight: bold;
   }
+
+  .active-submenu {
+    color: #00ffcc;
+    font-weight: bold;
+    text-shadow: 0px 0px 8px rgba(0, 255, 204, 0.8);
+  }
