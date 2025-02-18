@@ -9,6 +9,7 @@ const routeConfig = {
   reportBuilder: { module: 'reportBuilder', title: 'Report Builder' },
   editPublicFeed: { module: 'editPublicFeed', title: 'Edit Public Feed' },
   editDataFeed: { module: 'editDataFeed', title: 'Edit Data Feed' },
+  editWebsiteStyles: { module: 'editWebsiteStyles', title: 'Edit Website Styles' },
 };
 
 function updatePageTitle(newTitle) {
