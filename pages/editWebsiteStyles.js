@@ -1,5 +1,7 @@
 import { flattenStyles } from "../forms/formUtils/flattenStyles.js";
 
+const clientKey = window.clientID
+
 const availableComponents = [
     { id: "countBar", name: "Count Bars", script: "count-bars/cb0.js" },
     //{ id: "mapBox", name: "Map Box", script: "mapbox/mb0.js" },
@@ -45,12 +47,6 @@ export function loadPage() {
         toolsContainer.style.marginTop = "10px";
         section.appendChild(toolsContainer);
 
-        // Optionally, you could include a dedicated preview area.
-        // For example, if you want one central preview for all components:
-        // const previewContainer = document.createElement("div");
-        // previewContainer.id = `previewContainer-${component.id}`;
-        // section.appendChild(previewContainer);
-
         // Append the component section to the control panel stage
         setStage.appendChild(section);
 
@@ -60,8 +56,6 @@ export function loadPage() {
             componentContainer.id
         );
 
-        // Dynamically load the edit tools for this component.
-        // Naming convention: the tools file is named as {component.id}Tools.js
         loadEditTools(`${component.id}Tools.js`, toolsContainer.id);
     });
 }
@@ -74,7 +68,6 @@ function loadComponent(scriptUrl, containerId) {
       script.async = true;
   
       script.onload = () => {
-        // Verify that the component initializer exists.
         if (typeof window.ENSComponent === "function") {
           const rootDiv = document.getElementById(containerId);
           if (!rootDiv) return reject(`Container ${containerId} not found`);
@@ -104,8 +97,6 @@ function loadEditTools(toolsScript, containerId) {
             if (window.initializeEditTools) {
                 const toolsDiv = document.getElementById(containerId);
                 if (!toolsDiv) return reject("Tools container not found");
-
-                // Call the edit tools initializer for this component.
                 window.initializeEditTools(toolsDiv);
                 resolve();
             } else {
@@ -117,3 +108,56 @@ function loadEditTools(toolsScript, containerId) {
         document.body.appendChild(script);
     });
 }
+
+function addSaveButton() {
+    // Create the Save Styles button.
+    const saveBtn = document.createElement("button");
+    saveBtn.innerText = "Save Styles";
+    saveBtn.style.padding = "10px 20px";
+    saveBtn.style.marginTop = "10px";
+    saveBtn.style.cursor = "pointer";
+    
+    // Add a click event to send a POST request with the current style settings.
+    saveBtn.addEventListener("click", () => {
+      const clientKey = "YOUR_CLIENT_KEY"; // Replace with actual client key retrieval logic.
+      // Use fetch to POST the styles.
+      fetch(`https://client-control.911-ens-services.com/client/${clientKey}/countbar_styles`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+          // Add Authorization header if required.
+        },
+        body: JSON.stringify(window.countBarStyles)
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Failed to save styles, status: " + response.status);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Styles saved successfully:", data);
+          // Optionally, display a success message to the user.
+          alert("Styles saved successfully.");
+        })
+        .catch(error => {
+          console.error("Error saving styles:", error);
+          alert("Error saving styles. Please try again.");
+        });
+    });
+    
+    // Append the Save button to the tools container for the count bar.
+    const toolsContainer = document.getElementById("toolsContainer-countBar");
+    if (toolsContainer) {
+      toolsContainer.appendChild(saveBtn);
+    } else {
+      console.error("Tools container for countBar not found.");
+    }
+  }
+  
+  // Call addSaveButton() after your tools UI is loaded.
+  // For example, at the end of loadPage() in editWebsiteStyles.js:
+  document.addEventListener("DOMContentLoaded", () => {
+    // After your loadPage() finishes loading the components and tools:
+    addSaveButton();
+  });
