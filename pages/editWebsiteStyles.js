@@ -1,4 +1,4 @@
-import { flattenStyles } from "../forms/formUtils/flattenStyles.js";
+//import { flattenStyles } from "../forms/formUtils/flattenStyles.js";
 
 const clientKey = window.clientID
 
@@ -58,6 +58,7 @@ export function loadPage() {
 
         loadEditTools(`${component.id}Tools.js`, toolsContainer.id);
     });
+    addSaveButtonWhenReady();
 }
 
 function loadComponent(scriptUrl, containerId) {
@@ -109,24 +110,43 @@ function loadEditTools(toolsScript, containerId) {
     });
 }
 
-function addSaveButton() {
-    // Create the Save Styles button.
+function addSaveButtonWhenReady() {
+    // Select the container where the remote component is loaded.
+    const previewContainer = document.getElementById("componentContainer-countBar");
+    if (!previewContainer) {
+      console.error("Preview container not found");
+      return;
+    }
+  
+    // Create a MutationObserver to watch for when "countBlock" is added.
+    const observer = new MutationObserver((mutations, obs) => {
+      // Check if an element with id "countBlock" exists.
+      const countBlock = document.getElementById("countBlock");
+      if (countBlock) {
+        console.log("Found countBlock; adding Save button");
+        // Once the component is loaded, add the Save button.
+        addSaveButton();
+        // Stop observing.
+        obs.disconnect();
+      }
+    });
+  
+    // Start observing the preview container for child list changes.
+    observer.observe(previewContainer, { childList: true, subtree: true });
+  }
+  
+  function addSaveButton() {
+    console.log("Adding Save button");
     const saveBtn = document.createElement("button");
     saveBtn.innerText = "Save Styles";
     saveBtn.style.padding = "10px 20px";
     saveBtn.style.marginTop = "10px";
     saveBtn.style.cursor = "pointer";
     
-    // Add a click event to send a POST request with the current style settings.
     saveBtn.addEventListener("click", () => {
-      const clientKey = "YOUR_CLIENT_KEY"; // Replace with actual client key retrieval logic.
-      // Use fetch to POST the styles.
-      fetch(`https://client-control.911-ens-services.com/client/${clientKey}/countbar_styles`, {
+      fetch(`https://matrix.911-ens-services.com/client/${clientKey}/countbar_styles`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-          // Add Authorization header if required.
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(window.countBarStyles)
       })
         .then(response => {
@@ -137,7 +157,6 @@ function addSaveButton() {
         })
         .then(data => {
           console.log("Styles saved successfully:", data);
-          // Optionally, display a success message to the user.
           alert("Styles saved successfully.");
         })
         .catch(error => {
@@ -146,7 +165,6 @@ function addSaveButton() {
         });
     });
     
-    // Append the Save button to the tools container for the count bar.
     const toolsContainer = document.getElementById("toolsContainer-countBar");
     if (toolsContainer) {
       toolsContainer.appendChild(saveBtn);
@@ -154,10 +172,3 @@ function addSaveButton() {
       console.error("Tools container for countBar not found.");
     }
   }
-  
-  // Call addSaveButton() after your tools UI is loaded.
-  // For example, at the end of loadPage() in editWebsiteStyles.js:
-  document.addEventListener("DOMContentLoaded", () => {
-    // After your loadPage() finishes loading the components and tools:
-    addSaveButton();
-  });

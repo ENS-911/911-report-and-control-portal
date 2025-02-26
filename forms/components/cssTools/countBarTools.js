@@ -1,3 +1,5 @@
+//import { flattenStyles } from "../../formUtils/flattenStyles.js";
+
 /* File: countBarTools.js */
 
 // If saved settings exist from the database, assign them to window.countBarStyles before this file loads.
@@ -136,7 +138,7 @@ window.initializeEditTools = function(toolsContainer) {
         ]
       }
     ];
-  
+    
     // Determine the maximum number of controls among groups.
     let maxControls = 0;
     groups.forEach(group => {
@@ -144,26 +146,26 @@ window.initializeEditTools = function(toolsContainer) {
         maxControls = group.controls.length;
       }
     });
-  
-    // --- Build the Table Layout (No Header Row, No Row Colors) ---
+    
+    // Build the table layout.
     const table = document.createElement("table");
     table.style.width = "95%";
     table.style.margin = "0 auto";
     table.style.borderCollapse = "collapse";
-  
+    
     const tbody = document.createElement("tbody");
-  
+    
     groups.forEach(group => {
       const row = document.createElement("tr");
       row.style.background = "none";
-  
+    
       // First cell: group name.
       const nameCell = document.createElement("td");
       nameCell.textContent = group.groupName;
       nameCell.style.fontWeight = "bold";
       nameCell.style.padding = "8px";
       row.appendChild(nameCell);
-  
+    
       // For each control slot, add a cell.
       for (let i = 0; i < maxControls; i++) {
         const cell = document.createElement("td");
@@ -172,13 +174,13 @@ window.initializeEditTools = function(toolsContainer) {
           const control = group.controls[i];
           const controlDiv = document.createElement("div");
           // Label above input.
-          const label = document.createElement("div");
-          label.textContent = control.label;
-          label.style.fontSize = "1em";
-          label.style.marginBottom = "4px";
-          controlDiv.appendChild(label);
-  
-          let input;
+          const labelElem = document.createElement("div");
+          labelElem.textContent = control.label;
+          labelElem.style.fontSize = "1em";
+          labelElem.style.marginBottom = "4px";
+          controlDiv.appendChild(labelElem);
+    
+          let input;  // Declare input here
           if (control.type === "select") {
             input = document.createElement("select");
             control.options.forEach(opt => {
@@ -200,6 +202,7 @@ window.initializeEditTools = function(toolsContainer) {
               input.style.width = "60px";
             }
           }
+    
           input.addEventListener("input", function(e) {
             const value = (e.target.type === "checkbox") ? e.target.checked : e.target.value;
             group.target[control.key] = value;
@@ -217,64 +220,37 @@ window.initializeEditTools = function(toolsContainer) {
     table.appendChild(tbody);
     toolsContainer.innerHTML = "";
     toolsContainer.appendChild(table);
-  
-    // --- Update Preview: Apply CSS Changes Immediately ---
-    function updatePreview() {
-        const container = document.getElementById("countBlock");
-        if (!container) {
-          console.warn("countBlock not found. Retrying in 200ms.");
-          setTimeout(updatePreview, 200);
-          return;
-        }
-        
-        // Now that countBlock exists, continue with updates.
-        container.style.padding = window.countBarStyles.container.padding + "px";
-        container.style.backgroundColor = window.countBarStyles.container.backgroundColor;
-        
-        // Update each block. (Same as before.)
-        function updateBlock(elementId, settings) {
-          const elem = document.getElementById(elementId);
-          if (elem) {
-            elem.style.flex = "none"; 
-            elem.style.margin = settings.margin + "px";
-            elem.style.padding = settings.padding + "px";
-            elem.style.backgroundColor = settings.backgroundColor;
-            elem.style.border = settings.borderThickness + "px solid " + settings.borderColor;
-            elem.style.borderRadius = settings.borderRadius + "px";
-            elem.style.width = settings.width + "%";
-            const h3 = elem.querySelector("h3");
-            if (h3) {
-              h3.style.fontSize = settings.fontSize + "px";
-              h3.style.color = settings.textColor;
-            }
-          } else {
-            console.warn(elementId + " not found.");
-          }
-        }
-        
-        updateBlock("currentCount", window.countBarStyles.currentBlock);
-        updateBlock("dailyCount", window.countBarStyles.dailyBlock);
-        updateBlock("yearlyCount", window.countBarStyles.yearlyBlock);
-        
-        // Update clock styles.
-        const clockElem = document.getElementById("liveClock");
-        if (clockElem) {
-          clockElem.style.display = window.countBarStyles.clock.show ? "flex" : "none";
-          clockElem.style.margin = window.countBarStyles.clock.margin + "px";
-          clockElem.style.padding = window.countBarStyles.clock.padding + "px";
-          clockElem.style.backgroundColor = window.countBarStyles.clock.backgroundColor;
-          clockElem.style.border = window.countBarStyles.clock.borderThickness + "px solid " + window.countBarStyles.clock.borderColor;
-          clockElem.style.borderRadius = window.countBarStyles.clock.borderRadius + "px";
-          clockElem.style.width = window.countBarStyles.clock.width + "%";
-          const h3 = clockElem.querySelector("h3");
-          if (h3) {
-            h3.style.fontSize = window.countBarStyles.clock.fontSize + "px";
-            h3.style.color = window.countBarStyles.clock.textColor;
-          }
-        }
-      }           
-  
-    // --- Initial Update ---
+};  
+
+function updatePreview() {
+    const previewContainer = document.getElementById("componentContainer-countBar");
+    if (!previewContainer) {
+      console.warn("Preview container not found; updatePreview aborted.");
+      return;
+    }
+    // Use your flattenStyles function to get a flat style object.
+    const flatStyles = flattenStyles(window.countBarStyles);
+    if (typeof window.ENSComponent === "function") {
+      // Re-render the component in the preview container.
+      window.ENSComponent({ rootDiv: previewContainer, styles: flatStyles });
+    } else {
+      console.error("ENSComponent is not defined.");
+    }
+}
+            
+
+// --- Initial Update ---
+//updatePreview();
+
+function syncToolUI(styles) {
+    console.log("Syncing tool UI with styles", styles);
     updatePreview();
-};
+  }
   
+
+window.addEventListener('countBarStylesUpdated', (e) => {
+    // e.detail contains the current style settings from the component
+    syncToolUI(e.detail); // Replace with your tool UI update function
+});
+
+window.initializeEditTools = initializeEditTools;
