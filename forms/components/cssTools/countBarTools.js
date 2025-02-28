@@ -206,6 +206,7 @@ window.initializeEditTools = function(toolsContainer) {
           input.addEventListener("input", function(e) {
             const value = (e.target.type === "checkbox") ? e.target.checked : e.target.value;
             group.target[control.key] = value;
+            console.log(`Updated ${group.groupName} ${control.key} to ${value}`);
             updatePreview();
           });
           controlDiv.appendChild(input);
@@ -229,7 +230,9 @@ function updatePreview() {
       return;
     }
     // Use your flattenStyles function to get a flat style object.
+    console.log("Global state (window.countBarStyles):", window.countBarStyles);
     const flatStyles = flattenStyles(window.countBarStyles);
+    console.log("Applying flattened styles:", flatStyles);
     if (typeof window.ENSComponent === "function") {
       // Re-render the component in the preview container.
       window.ENSComponent({ rootDiv: previewContainer, styles: flatStyles });
@@ -251,6 +254,6 @@ function syncToolUI(styles) {
 window.addEventListener('countBarStylesUpdated', (e) => {
     // e.detail contains the current style settings from the component
     syncToolUI(e.detail); // Replace with your tool UI update function
-});
+}, { once: true });
 
 window.initializeEditTools = initializeEditTools;
