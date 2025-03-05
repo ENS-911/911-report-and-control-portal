@@ -171,4 +171,14 @@ function addSaveButtonWhenReady() {
     } else {
       console.error("Tools container for countBar not found.");
     }
-  }
+}
+
+window.addEventListener('countBarStylesUpdated', (e) => {
+    console.log("Component styles updated:", e.detail);
+    const toolsContainer = document.getElementById("toolsContainer-countBar");
+    if (toolsContainer && typeof window.initializeEditTools === "function") {
+      // Rebuild the tool UI so its input values reflect the updated styles.
+      window.initializeEditTools(toolsContainer);
+      addSaveButton();
+    }
+});
