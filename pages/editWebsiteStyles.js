@@ -1,10 +1,8 @@
-//import { flattenStyles } from "../forms/formUtils/flattenStyles.js";
-
 const clientKey = window.clientID
 
 const availableComponents = [
-    { id: "countBar", name: "Count Bars", script: "count-bars/cb0.js" },
-    //{ id: "mapBox", name: "Map Box", script: "mapbox/mb0.js" },
+    { id: "countBar", name: "Count Bars", script: "count-bars/cb0.js", globalComponent: "ENSComponent_countBar", globalTools: "initializeEditTools_countBar" },
+    { id: "mapBox", name: "Map", script: "map/map.js", globalComponent: "ENSComponent_mapBox" },
     //{ id: "statWidget", name: "Stat Widget", script: "stat-widget/sw0.js" },
     //{ id: "imageSlider", name: "Image Slider", script: "image-slider/is0.js" },
     //{ id: "newsTicker", name: "News Ticker", script: "news-ticker/nt0.js" },
@@ -53,29 +51,27 @@ export function loadPage() {
         // Dynamically load the component (its preview)
         loadComponent(
             `https://ensloadout.911emergensee.com/ens-packages/components/${component.script}`,
-            componentContainer.id
+            componentContainer.id,
+            component.globalComponent
         );
 
-        loadEditTools(`${component.id}Tools.js`, toolsContainer.id);
+        loadEditTools(`${component.id}Tools.js`, toolsContainer.id, component.globalTools);
     });
     addSaveButtonWhenReady();
 }
 
-function loadComponent(scriptUrl, containerId) {
+function loadComponent(scriptUrl, containerId, globalName) {
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = scriptUrl;
       script.type = "text/javascript";
       script.async = true;
-  
       script.onload = () => {
-        if (typeof window.ENSComponent === "function") {
+        if (typeof window[globalName] === "function") {
           const rootDiv = document.getElementById(containerId);
           if (!rootDiv) return reject(`Container ${containerId} not found`);
-          
-          // Flatten the nested styles and pass them in.
           const flatStyles = flattenStyles(window.countBarStyles);
-          window.ENSComponent({ rootDiv, styles: flatStyles });
+          window[globalName]({ rootDiv, styles: flatStyles });
           resolve();
         } else {
           reject("ENSComponent not found after script load");

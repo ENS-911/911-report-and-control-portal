@@ -9,11 +9,21 @@ class State {
     return this.state;
   }
 
-  // Set new state, merging with existing state
+  // Set new state, merging with existing state.
+  // Also update window.clientData and window.activeData if present.
   setState(newState) {
     this.state = { ...this.state, ...newState };
-    console.log('Updated Global State:', this.state);  // Log the updated state
-    this.notifyListeners();  // Notify listeners about the state update
+
+    // Update global variables if these keys are present:
+    if (newState.clientData !== undefined) {
+      window.clientData = newState.clientData;
+    }
+    if (newState.mainData !== undefined) {
+      window.mainData = newState.mainData;
+    }
+    
+    console.log('Updated Global State:', this.state);
+    this.notifyListeners();
   }
 
   // Subscribe to state changes
@@ -34,7 +44,7 @@ class State {
     try {
       const response = await fetch(`${endpoint}?${new URLSearchParams(params)}`);
       const data = await response.json();
-      return data;  // Handle pagination or filtering on the backend
+      return data;
     } catch (error) {
       console.error('Error fetching data from server:', error);
       return null;
@@ -45,7 +55,7 @@ class State {
   async loadPageData(pageNumber = 1, pageSize = 100) {
     const data = await this.fetchDataFromServer('/api/data', { page: pageNumber, size: pageSize });
     if (data) {
-      this.setState({ mainData: data });  // Only store the current chunk of data
+      this.setState({ mainData: data });
     }
   }
 
@@ -54,21 +64,21 @@ class State {
     const endpoint = `/report/${clientKey}`;
     const reportData = await this.fetchDataFromServer(endpoint, filters);
     if (reportData) {
-      this.setState({ reportData });  // Store fetched report data in state
+      this.setState({ reportData });
     }
   }
 }
 
-// Export a global state instance
+// Export a global state instance with initial keys.
 export const globalState = new State({
   clientData: null,
   mainData: null,
-  activeData: [],  // Store active incidents
-  todayData: [],   // Store today's incidents
-  reportData: null,  // Store report data
+  activeData: [],
+  todayData: [],
+  reportData: null,
 });
 
-// Function to initialize data fetching or pagination
+// Function to initialize data fetching or pagination.
 export async function loadInitialData() {
-  await globalState.loadPageData(1); // Start by loading the first page
+  await globalState.loadPageData(1);
 }
