@@ -6,56 +6,56 @@
 // Otherwise, assign the default settings.
 if (!window.countBarStyles) {
     window.countBarStyles = {
-      container: {
-        padding: "10",
-        backgroundColor: "#222"
-      },
-      currentBlock: {
-        fontSize: "16",
-        textColor: "#000",
-        backgroundColor: "#ffcccc",
-        width: "20",
-        borderThickness: "1",
-        borderColor: "#ccc",
-        borderRadius: "5",
-        padding: "10",
-        margin: "5"
-      },
-      dailyBlock: {
-        fontSize: "16",
-        textColor: "#000",
-        backgroundColor: "#ccffcc",
-        width: "20",
-        borderThickness: "1",
-        borderColor: "#ccc",
-        borderRadius: "5",
-        padding: "10",
-        margin: "5"
-      },
-      yearlyBlock: {
-        fontSize: "16",
-        textColor: "#000",
-        backgroundColor: "#ccccff",
-        width: "20",
-        borderThickness: "1",
-        borderColor: "#ccc",
-        borderRadius: "5",
-        padding: "10",
-        margin: "5"
-      },
-      clock: {
-        show: false,
-        hourFormat: "12",
-        fontSize: "16",
-        textColor: "#000",
-        backgroundColor: "#ddd",
-        borderThickness: "1",
-        borderColor: "#ccc",
-        borderRadius: "5",
-        padding: "10",
-        margin: "5",
-        width: "20"
-      }
+        container: {
+            padding: "10",
+            backgroundColor: "#222"
+        },
+        currentBlock: {
+            fontSize: "16",
+            textColor: "#000",
+            backgroundColor: "#ffcccc",
+            width: "20",
+            borderThickness: "1",
+            borderColor: "#ccc",
+            borderRadius: "5",
+            padding: "10",
+            margin: "5"
+        },
+        dailyBlock: {
+            fontSize: "16",
+            textColor: "#000",
+            backgroundColor: "#ccffcc",
+            width: "20",
+            borderThickness: "1",
+            borderColor: "#ccc",
+            borderRadius: "5",
+            padding: "10",
+            margin: "5"
+        },
+        yearlyBlock: {
+            fontSize: "16",
+            textColor: "#000",
+            backgroundColor: "#ccccff",
+            width: "20",
+            borderThickness: "1",
+            borderColor: "#ccc",
+            borderRadius: "5",
+            padding: "10",
+            margin: "5"
+        },
+        clock: {
+            show: false,
+            hourFormat: "12",
+            fontSize: "16",
+            textColor: "#000",
+            backgroundColor: "#ddd",
+            borderThickness: "1",
+            borderColor: "#ccc",
+            borderRadius: "5",
+            padding: "10",
+            margin: "5",
+            width: "20"
+        }
     };
 }
   
@@ -63,80 +63,80 @@ window.initializeEditTools = function(toolsContainer) {
     // --- Define Tool Groups ---
     // Each group corresponds to one row in our table.
     const groups = [
-      {
-        groupName: "Container Settings",
-        target: window.countBarStyles.container,
-        controls: [
-          { key: "padding", type: "number", label: "Padding" },
-          { key: "backgroundColor", type: "color", label: "BG Color" }
-        ]
-      },
-      {
-        groupName: "Current Count Block Settings",
-        target: window.countBarStyles.currentBlock,
-        controls: [
-          { key: "fontSize", type: "number", label: "Font Size" },
-          { key: "textColor", type: "color", label: "Text Color" },
-          { key: "backgroundColor", type: "color", label: "BG Color" },
-          { key: "width", type: "number", label: "Width (%)" },
-          { key: "borderThickness", type: "number", label: "Border Thk" },
-          { key: "borderColor", type: "color", label: "Border Color" },
-          { key: "borderRadius", type: "number", label: "Border Radius" },
-          { key: "padding", type: "number", label: "Padding" },
-          { key: "margin", type: "number", label: "Margin" }
-        ]
-      },
-      {
-        groupName: "Daily Count Block Settings",
-        target: window.countBarStyles.dailyBlock,
-        controls: [
-          { key: "fontSize", type: "number", label: "Font Size" },
-          { key: "textColor", type: "color", label: "Text Color" },
-          { key: "backgroundColor", type: "color", label: "BG Color" },
-          { key: "width", type: "number", label: "Width (%)" },
-          { key: "borderThickness", type: "number", label: "Border Thk" },
-          { key: "borderColor", type: "color", label: "Border Color" },
-          { key: "borderRadius", type: "number", label: "Border Radius" },
-          { key: "padding", type: "number", label: "Padding" },
-          { key: "margin", type: "number", label: "Margin" }
-        ]
-      },
-      {
-        groupName: "Yearly Count Block Settings",
-        target: window.countBarStyles.yearlyBlock,
-        controls: [
-          { key: "fontSize", type: "number", label: "Font Size" },
-          { key: "textColor", type: "color", label: "Text Color" },
-          { key: "backgroundColor", type: "color", label: "BG Color" },
-          { key: "width", type: "number", label: "Width (%)" },
-          { key: "borderThickness", type: "number", label: "Border Thk" },
-          { key: "borderColor", type: "color", label: "Border Color" },
-          { key: "borderRadius", type: "number", label: "Border Radius" },
-          { key: "padding", type: "number", label: "Padding" },
-          { key: "margin", type: "number", label: "Margin" }
-        ]
-      },
-      {
-        groupName: "Clock Settings",
-        target: window.countBarStyles.clock,
-        controls: [
-          { key: "show", type: "checkbox", label: "Show Clock" },
-          { key: "hourFormat", type: "select", label: "Hour Format", options: [
-              { value: "12", label: "12-hour" },
-              { value: "24", label: "24-hour" }
+        {
+            groupName: "Container Settings",
+            target: window.countBarStyles.container,
+            controls: [
+                { key: "padding", type: "number", label: "Padding" },
+                { key: "backgroundColor", type: "color", label: "BG Color" }
             ]
-          },
-          { key: "fontSize", type: "number", label: "Font Size" },
-          { key: "textColor", type: "color", label: "Text Color" },
-          { key: "backgroundColor", type: "color", label: "BG Color" },
-          { key: "borderThickness", type: "number", label: "Border Thk" },
-          { key: "borderColor", type: "color", label: "Border Color" },
-          { key: "borderRadius", type: "number", label: "Border Radius" },
-          { key: "padding", type: "number", label: "Padding" },
-          { key: "margin", type: "number", label: "Margin" },
-          { key: "width", type: "number", label: "Width (%)" }
-        ]
-      }
+        },
+        {
+            groupName: "Current Count Block Settings",
+            target: window.countBarStyles.currentBlock,
+            controls: [
+                { key: "fontSize", type: "number", label: "Font Size" },
+                { key: "textColor", type: "color", label: "Text Color" },
+                { key: "backgroundColor", type: "color", label: "BG Color" },
+                { key: "width", type: "number", label: "Width (%)" },
+                { key: "borderThickness", type: "number", label: "Border Thk" },
+                { key: "borderColor", type: "color", label: "Border Color" },
+                { key: "borderRadius", type: "number", label: "Border Radius" },
+                { key: "padding", type: "number", label: "Padding" },
+                { key: "margin", type: "number", label: "Margin" }
+            ]
+        },
+        {
+            groupName: "Daily Count Block Settings",
+            target: window.countBarStyles.dailyBlock,
+            controls: [
+                { key: "fontSize", type: "number", label: "Font Size" },
+                { key: "textColor", type: "color", label: "Text Color" },
+                { key: "backgroundColor", type: "color", label: "BG Color" },
+                { key: "width", type: "number", label: "Width (%)" },
+                { key: "borderThickness", type: "number", label: "Border Thk" },
+                { key: "borderColor", type: "color", label: "Border Color" },
+                { key: "borderRadius", type: "number", label: "Border Radius" },
+                { key: "padding", type: "number", label: "Padding" },
+                { key: "margin", type: "number", label: "Margin" }
+            ]
+        },
+        {
+            groupName: "Yearly Count Block Settings",
+            target: window.countBarStyles.yearlyBlock,
+            controls: [
+                { key: "fontSize", type: "number", label: "Font Size" },
+                { key: "textColor", type: "color", label: "Text Color" },
+                { key: "backgroundColor", type: "color", label: "BG Color" },
+                { key: "width", type: "number", label: "Width (%)" },
+                { key: "borderThickness", type: "number", label: "Border Thk" },
+                { key: "borderColor", type: "color", label: "Border Color" },
+                { key: "borderRadius", type: "number", label: "Border Radius" },
+                { key: "padding", type: "number", label: "Padding" },
+                { key: "margin", type: "number", label: "Margin" }
+            ]
+        },
+        {
+            groupName: "Clock Settings",
+            target: window.countBarStyles.clock,
+            controls: [
+                { key: "show", type: "checkbox", label: "Show Clock" },
+                { key: "hourFormat", type: "select", label: "Hour Format", options: [
+                        { value: "12", label: "12-hour" },
+                        { value: "24", label: "24-hour" }
+                    ]
+                },
+                { key: "fontSize", type: "number", label: "Font Size" },
+                { key: "textColor", type: "color", label: "Text Color" },
+                { key: "backgroundColor", type: "color", label: "BG Color" },
+                { key: "borderThickness", type: "number", label: "Border Thk" },
+                { key: "borderColor", type: "color", label: "Border Color" },
+                { key: "borderRadius", type: "number", label: "Border Radius" },
+                { key: "padding", type: "number", label: "Padding" },
+                { key: "margin", type: "number", label: "Margin" },
+                { key: "width", type: "number", label: "Width (%)" }
+            ]
+        }
     ];
     
     // Determine the maximum number of controls among groups.
@@ -156,67 +156,67 @@ window.initializeEditTools = function(toolsContainer) {
     const tbody = document.createElement("tbody");
     
     groups.forEach(group => {
-      const row = document.createElement("tr");
-      row.style.background = "none";
-    
-      // First cell: group name.
-      const nameCell = document.createElement("td");
-      nameCell.textContent = group.groupName;
-      nameCell.style.fontWeight = "bold";
-      nameCell.style.padding = "8px";
-      row.appendChild(nameCell);
+        const row = document.createElement("tr");
+        row.style.background = "none";
+        
+        // First cell: group name.
+        const nameCell = document.createElement("td");
+        nameCell.textContent = group.groupName;
+        nameCell.style.fontWeight = "bold";
+        nameCell.style.padding = "8px";
+        row.appendChild(nameCell);
     
       // For each control slot, add a cell.
-      for (let i = 0; i < maxControls; i++) {
-        const cell = document.createElement("td");
-        cell.style.padding = "8px";
-        if (group.controls[i]) {
-          const control = group.controls[i];
-          const controlDiv = document.createElement("div");
-          // Label above input.
-          const labelElem = document.createElement("div");
-          labelElem.textContent = control.label;
-          labelElem.style.fontSize = "1em";
-          labelElem.style.marginBottom = "4px";
-          controlDiv.appendChild(labelElem);
-    
-          let input;  // Declare input here
-          if (control.type === "select") {
-            input = document.createElement("select");
-            control.options.forEach(opt => {
-              const option = document.createElement("option");
-              option.value = opt.value;
-              option.textContent = opt.label;
-              input.appendChild(option);
-            });
-            input.value = group.target[control.key];
-          } else if (control.type === "checkbox") {
-            input = document.createElement("input");
-            input.type = "checkbox";
-            input.checked = group.target[control.key];
-          } else {
-            input = document.createElement("input");
-            input.type = control.type; // "number" or "color"
-            input.value = group.target[control.key];
-            if (control.type === "number") {
-              input.style.width = "60px";
+        for (let i = 0; i < maxControls; i++) {
+            const cell = document.createElement("td");
+            cell.style.padding = "8px";
+            if (group.controls[i]) {
+                const control = group.controls[i];
+                const controlDiv = document.createElement("div");
+                // Label above input.
+                const labelElem = document.createElement("div");
+                labelElem.textContent = control.label;
+                labelElem.style.fontSize = "1em";
+                labelElem.style.marginBottom = "4px";
+                controlDiv.appendChild(labelElem);
+            
+                let input;  // Declare input here
+                if (control.type === "select") {
+                    input = document.createElement("select");
+                    control.options.forEach(opt => {
+                    const option = document.createElement("option");
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    input.appendChild(option);
+                    });
+                    input.value = group.target[control.key];
+                } else if (control.type === "checkbox") {
+                    input = document.createElement("input");
+                    input.type = "checkbox";
+                    input.checked = group.target[control.key];
+                } else {
+                    input = document.createElement("input");
+                    input.type = control.type; // "number" or "color"
+                    input.value = group.target[control.key];
+                    if (control.type === "number") {
+                    input.style.width = "60px";
+                    }
+                }
+            
+                input.addEventListener("input", function(e) {
+                    const value = (e.target.type === "checkbox") ? e.target.checked : e.target.value;
+                    group.target[control.key] = value;
+                    console.log(`Updated ${group.groupName} ${control.key} to ${value}`);
+                    updatePreview();
+                });
+                controlDiv.appendChild(input);
+                cell.appendChild(controlDiv);
+            } else {
+                cell.textContent = "";
             }
-          }
-    
-          input.addEventListener("input", function(e) {
-            const value = (e.target.type === "checkbox") ? e.target.checked : e.target.value;
-            group.target[control.key] = value;
-            console.log(`Updated ${group.groupName} ${control.key} to ${value}`);
-            updatePreview();
-          });
-          controlDiv.appendChild(input);
-          cell.appendChild(controlDiv);
-        } else {
-          cell.textContent = "";
+            row.appendChild(cell);
         }
-        row.appendChild(cell);
-      }
-      tbody.appendChild(row);
+        tbody.appendChild(row);
     });
     table.appendChild(tbody);
     toolsContainer.innerHTML = "";
@@ -226,31 +226,26 @@ window.initializeEditTools = function(toolsContainer) {
 function updatePreview() {
     const previewContainer = document.getElementById("componentContainer-countBar");
     if (!previewContainer) {
-      console.warn("Preview container not found; updatePreview aborted.");
-      return;
+        console.warn("Preview container not found; updatePreview aborted.");
+        return;
     }
     // Use your flattenStyles function to get a flat style object.
     console.log("Global state (window.countBarStyles):", window.countBarStyles);
     const flatStyles = flattenStyles(window.countBarStyles);
     console.log("Applying flattened styles:", flatStyles);
     if (typeof window.ENSComponent === "function") {
-      // Re-render the component in the preview container.
-      window.ENSComponent({ rootDiv: previewContainer, styles: flatStyles });
+        // Re-render the component in the preview container.
+        window.ENSComponent({ rootDiv: previewContainer, styles: flatStyles });
     } else {
-      console.error("ENSComponent is not defined.");
+        console.error("ENSComponent is not defined.");
     }
 }
-            
-
-// --- Initial Update ---
-//updatePreview();
 
 function syncToolUI(styles) {
     console.log("Syncing tool UI with styles", styles);
     updatePreview();
-  }
+}
   
-
 window.addEventListener('countBarStylesUpdated', (e) => {
     // e.detail contains the current style settings from the component
     syncToolUI(e.detail); // Replace with your tool UI update function
