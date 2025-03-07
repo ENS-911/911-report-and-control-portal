@@ -233,9 +233,8 @@ function updatePreview() {
     console.log("Global state (window.countBarStyles):", window.countBarStyles);
     const flatStyles = flattenStyles(window.countBarStyles);
     console.log("Applying flattened styles:", flatStyles);
-    if (typeof window.ENSComponent === "function") {
-        // Re-render the component in the preview container.
-        window.ENSComponent({ rootDiv: previewContainer, styles: flatStyles });
+    if (typeof window.ENSComponent_countBar === "function") {
+        window.ENSComponent_countBar({ rootDiv: previewContainer, styles: flatStyles });
     } else {
         console.error("ENSComponent is not defined.");
     }

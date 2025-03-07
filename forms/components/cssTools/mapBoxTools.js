@@ -1,1 +1,0 @@
-window.initializeEditTools = function(toolsContainer) {}

@@ -2,7 +2,16 @@ const clientKey = window.clientID
 
 const availableComponents = [
     { id: "countBar", name: "Count Bars", script: "count-bars/cb0.js", globalComponent: "ENSComponent_countBar", globalTools: "initializeEditTools_countBar" },
-    { id: "mapBox", name: "Map", script: "map/map.js", globalComponent: "ENSComponent_mapBox" },
+    {
+        id: "mapBox",
+        name: "Map",
+        script: "map/map.js",
+        componentContainerId: "componentContainer-mapBox",  // For the map itself.
+        toolsContainerId: "toolsContainer-mapBox",          // For the map tools.
+        globalComponent: "ENSComponent_mapBox",
+        globalTools: "initializeEditTools_mapBox",
+        toolsScript: "mapTools.js"
+    },
     //{ id: "statWidget", name: "Stat Widget", script: "stat-widget/sw0.js" },
     //{ id: "imageSlider", name: "Image Slider", script: "image-slider/is0.js" },
     //{ id: "newsTicker", name: "News Ticker", script: "news-ticker/nt0.js" },
@@ -55,7 +64,7 @@ export function loadPage() {
             component.globalComponent
         );
 
-        loadEditTools(`${component.id}Tools.js`, toolsContainer.id, component.globalTools);
+        loadEditTools(component.toolsScript, toolsContainer.id, component.globalTools);
     });
     addSaveButtonWhenReady();
 }
@@ -132,8 +141,18 @@ function addSaveButtonWhenReady() {
   }
   
   function addSaveButton() {
-    console.log("Adding Save button");
+    const toolsContainer = document.getElementById("toolsContainer-countBar");
+    if (!toolsContainer) {
+        console.error("Tools container for countBar not found.");
+        return;
+    }
+    // Check if the button is already present.
+    if (document.getElementById("saveStylesBtn")) {
+        return; // Button already exists—do not add another.
+    }
+
     const saveBtn = document.createElement("button");
+    saveBtn.id = "saveStylesBtn";
     saveBtn.innerText = "Save Styles";
     saveBtn.style.padding = "10px 20px";
     saveBtn.style.marginTop = "10px";
@@ -161,7 +180,6 @@ function addSaveButtonWhenReady() {
         });
     });
     
-    const toolsContainer = document.getElementById("toolsContainer-countBar");
     if (toolsContainer) {
       toolsContainer.appendChild(saveBtn);
     } else {
