@@ -1,13 +1,13 @@
+//import { updatePreview } from '../../../pages/editWebsiteStyles.js'
+
 console.log("mapTools.js loaded");
 
 window.mapStyles = window.mapStyles || {
     mapHeight: 800,
     mapboxStyle: "mapbox://styles/mapbox/streets-v12"
-  };
+};
   
-  window.initializeEditTools_mapBox = function(toolsContainer) {
-    console.log("Map tools function called.");
-    toolsContainer.innerHTML = "<p>Map Tools Loaded</p>";
+window.initializeEditTools_mapBox = function(toolsContainer) {
     const groups = [
       {
         groupName: "Map Settings",
@@ -21,9 +21,7 @@ window.mapStyles = window.mapStyles || {
               { value: "mapbox://styles/mapbox/light-v11", label: "Mapbox Light" },
               { value: "mapbox://styles/mapbox/dark-v11", label: "Mapbox Dark" },
               { value: "mapbox://styles/mapbox/satellite-v9", label: "Mapbox Satellite" },
-              { value: "mapbox://styles/mapbox/satellite-streets-v12", label: "Mapbox Satellite Streets" },
-              { value: "mapbox://styles/mapbox/navigation-day-v1", label: "Mapbox Navigation Day" },
-              { value: "mapbox://styles/mapbox/navigation-night-v1", label: "Mapbox Navigation Night" }
+              { value: "mapbox://styles/mapbox/satellite-streets-v12", label: "Mapbox Satellite Streets" }
             ]
           }
         ]
@@ -91,12 +89,9 @@ window.mapStyles = window.mapStyles || {
             group.target[control.key] = value;
             // Trigger a map update (ensure updateMapPreview() is defined in map.js)
             if (typeof updateMapPreview === "function") {
-              updateMapPreview();
-            } else {
-              console.error("updateMapPreview function is not defined.");
+              updateMapPreview("mapBox");
             }
           });
-    
           controlDiv.appendChild(input);
           cell.appendChild(controlDiv);
         } else {
@@ -113,3 +108,35 @@ window.mapStyles = window.mapStyles || {
     toolsContainer.appendChild(table);
   };
   
+  function syncToolUI(styles) {
+    console.log("Syncing tool UI with styles", styles);
+    updateMapPreview("mapBox");
+}
+  
+window.addEventListener('mapBoxStylesUpdated', (e) => {
+    // e.detail contains the current style settings from the component
+    syncToolUI(e.detail); // Replace with your tool UI update function
+}, { once: true });
+
+function updateMapPreview() {
+    if (!window.map) {
+      console.warn("Map instance not available, retrying updateMapPreview in 200ms.");
+      setTimeout(updateMapPreview, 200);
+      return;
+    }
+    
+    // Update the map container height if available.
+    const mapArea = document.getElementById("map");
+    if (mapArea && window.mapStyles && window.mapStyles.mapHeight) {
+      mapArea.style.height = window.mapStyles.mapHeight + "px";
+    }
+    
+    // Update the map style using the global mapStyles.
+    const newStyle = (window.mapStyles && window.mapStyles.mapboxStyle) || "mapbox://styles/mapbox/streets-v12";
+    window.map.setStyle(newStyle);
+}  
+  
+// Attach updateMapPreview to window so it’s globally available.
+window.updateMapPreview = updateMapPreview;
+
+window.initializeEditTools_mapBox = initializeEditTools_mapBox;

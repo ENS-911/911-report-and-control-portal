@@ -1,22 +1,27 @@
 const clientKey = window.clientID
 
 const availableComponents = [
-    { id: "countBar", name: "Count Bars", script: "count-bars/cb0.js", globalComponent: "ENSComponent_countBar", globalTools: "initializeEditTools_countBar" },
-    {
-        id: "mapBox",
-        name: "Map",
-        script: "map/map.js",
-        componentContainerId: "componentContainer-mapBox",  // For the map itself.
-        toolsContainerId: "toolsContainer-mapBox",          // For the map tools.
-        globalComponent: "ENSComponent_mapBox",
-        globalTools: "initializeEditTools_mapBox",
-        toolsScript: "mapTools.js"
+    { 
+      id: "countBar", 
+      name: "Count Bars", 
+      script: "count-bars/cb0.js", 
+      globalComponent: "ENSComponent_countBar", 
+      globalTools: "initializeEditTools_countBar",
+      toolsScript: "countBarTools.js",
+      componentContainerId: "componentContainer-countBar",  
+      toolsContainerId: "toolsContainer-countBar"
     },
-    //{ id: "statWidget", name: "Stat Widget", script: "stat-widget/sw0.js" },
-    //{ id: "imageSlider", name: "Image Slider", script: "image-slider/is0.js" },
-    //{ id: "newsTicker", name: "News Ticker", script: "news-ticker/nt0.js" },
-    //{ id: "socialFeed", name: "Social Feed", script: "social-feed/sf0.js" }
-];
+    { 
+      id: "mapBox", 
+      name: "Map", 
+      script: "map/map.js", 
+      globalComponent: "ENSComponent_mapBox", 
+      globalTools: "initializeEditTools_mapBox",
+      toolsScript: "mapTools.js",
+      componentContainerId: "componentContainer-mapBox",  
+      toolsContainerId: "toolsContainer-mapBox"
+    }
+  ];
 
 export function loadPage() {
     const setStage = document.getElementById('contentBody');
@@ -83,7 +88,7 @@ function loadComponent(scriptUrl, containerId, globalName) {
           window[globalName]({ rootDiv, styles: flatStyles });
           resolve();
         } else {
-          reject("ENSComponent not found after script load");
+            reject(`${globalComponentName} not found after script load`);
         }
       };
   
@@ -92,26 +97,24 @@ function loadComponent(scriptUrl, containerId, globalName) {
     });
 }
 
-function loadEditTools(toolsScript, containerId) {
+function loadEditTools(toolsScript, containerId, globalToolsName) {
     return new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = `./forms/components/cssTools/${toolsScript}`; // Tools loaded from cssTools folder
-        script.type = "text/javascript";
-        script.async = true;
-
-        script.onload = () => {
-            if (window.initializeEditTools) {
-                const toolsDiv = document.getElementById(containerId);
-                if (!toolsDiv) return reject("Tools container not found");
-                window.initializeEditTools(toolsDiv);
-                resolve();
-            } else {
-                reject("Edit tools function not found after script load");
-            }
-        };
-
-        script.onerror = () => reject("Failed to load edit tools script");
-        document.body.appendChild(script);
+      const script = document.createElement("script");
+      script.src = `./forms/components/cssTools/${toolsScript}`;
+      script.type = "text/javascript";  // classic script (not a module)
+      script.async = true;
+      script.onload = () => {
+        if (window[globalToolsName]) {
+          const toolsDiv = document.getElementById(containerId);
+          if (!toolsDiv) return reject("Tools container not found");
+          window[globalToolsName](toolsDiv);
+          resolve();
+        } else {
+          reject("Edit tools function not found after script load");
+        }
+      };
+      script.onerror = () => reject("Failed to load edit tools script: " + toolsScript);
+      document.body.appendChild(script);
     });
 }
 
@@ -187,6 +190,54 @@ function addSaveButtonWhenReady() {
     }
 }
 
+export function updatePreview(componentId) {
+    console.log('component id passed: ', componentId)
+    // Determine the preview container based on the component's container ID.
+    const containerId = `componentContainer-${componentId}`;
+    const previewContainer = document.getElementById(containerId);
+    if (!previewContainer) {
+      console.warn(`Preview container not found for ${componentId}; updatePreview aborted.`);
+      return;
+    }
+    
+    // Choose the global style object based on componentId.
+    let globalStyles;
+    let initializer;
+    
+    switch (componentId) {
+      case "countBar":
+        globalStyles = window.countBarStyles;
+        initializer = window.ENSComponent_countBar;
+        break;
+      case "mapBox":
+        globalStyles = window.mapStyles;
+        initializer = window.ENSComponent_mapBox;
+        break;
+      // Add cases for additional components as needed.
+      default:
+        console.error(`No global styles or initializer defined for componentId: ${componentId}`);
+        return;
+    }
+    
+    // Ensure the flattenStyles function is available.
+    if (typeof flattenStyles !== "function") {
+      console.error("flattenStyles is not defined.");
+      return;
+    }
+    
+    // Flatten the styles.
+    const flatStyles = flattenStyles(globalStyles);
+    console.log(`Applying flattened styles for ${componentId}:`, flatStyles);
+    
+    // Check that the initializer function exists and re-render the component.
+    if (typeof initializer === "function") {
+      initializer({ rootDiv: previewContainer, styles: flatStyles });
+    } else {
+      console.error(`Component initializer is not defined for ${componentId}.`);
+    }
+}
+  
+
 window.addEventListener('countBarStylesUpdated', (e) => {
     console.log("Component styles updated:", e.detail);
     const toolsContainer = document.getElementById("toolsContainer-countBar");
@@ -196,3 +247,5 @@ window.addEventListener('countBarStylesUpdated', (e) => {
       addSaveButton();
     }
 });
+
+window.updatePreview = updatePreview

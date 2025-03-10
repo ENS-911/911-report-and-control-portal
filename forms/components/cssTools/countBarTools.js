@@ -1,4 +1,4 @@
-//import { flattenStyles } from "../../formUtils/flattenStyles.js";
+//import { updatePreview } from '../../../pages/editWebsiteStyles.js'
 
 /* File: countBarTools.js */
 
@@ -59,9 +59,7 @@ if (!window.countBarStyles) {
     };
 }
   
-window.initializeEditTools = function(toolsContainer) {
-    // --- Define Tool Groups ---
-    // Each group corresponds to one row in our table.
+window.initializeEditTools_countBar = function(toolsContainer) {
     const groups = [
         {
             groupName: "Container Settings",
@@ -207,7 +205,7 @@ window.initializeEditTools = function(toolsContainer) {
                     const value = (e.target.type === "checkbox") ? e.target.checked : e.target.value;
                     group.target[control.key] = value;
                     console.log(`Updated ${group.groupName} ${control.key} to ${value}`);
-                    updatePreview();
+                    updatePreview("countBar");
                 });
                 controlDiv.appendChild(input);
                 cell.appendChild(controlDiv);
@@ -221,28 +219,11 @@ window.initializeEditTools = function(toolsContainer) {
     table.appendChild(tbody);
     toolsContainer.innerHTML = "";
     toolsContainer.appendChild(table);
-};  
-
-function updatePreview() {
-    const previewContainer = document.getElementById("componentContainer-countBar");
-    if (!previewContainer) {
-        console.warn("Preview container not found; updatePreview aborted.");
-        return;
-    }
-    // Use your flattenStyles function to get a flat style object.
-    console.log("Global state (window.countBarStyles):", window.countBarStyles);
-    const flatStyles = flattenStyles(window.countBarStyles);
-    console.log("Applying flattened styles:", flatStyles);
-    if (typeof window.ENSComponent_countBar === "function") {
-        window.ENSComponent_countBar({ rootDiv: previewContainer, styles: flatStyles });
-    } else {
-        console.error("ENSComponent is not defined.");
-    }
-}
+};
 
 function syncToolUI(styles) {
     console.log("Syncing tool UI with styles", styles);
-    updatePreview();
+    updatePreview("countBar");
 }
   
 window.addEventListener('countBarStylesUpdated', (e) => {
@@ -250,4 +231,4 @@ window.addEventListener('countBarStylesUpdated', (e) => {
     syncToolUI(e.detail); // Replace with your tool UI update function
 }, { once: true });
 
-window.initializeEditTools = initializeEditTools;
+window.initializeEditTools_countBar = initializeEditTools_countBar;
