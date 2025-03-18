@@ -148,3 +148,4 @@ async function createCountBar(options) {
     window.getCurrentStyles_countBar = getCurrentStyles;
   }
   
+  export { createCountBar };

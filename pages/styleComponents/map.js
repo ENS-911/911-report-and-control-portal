@@ -55,7 +55,7 @@ function waitForGlobalData(timeout = 5000) {
     });
 }  
 
-async function mapRun(options) {
+export async function mapRun(options) {
     try {
         await waitForGlobalData();
       } catch (err) {
@@ -287,5 +287,3 @@ async function mapRun(options) {
     window.updateMap = updateMarkers;
     return map;
 }
-
-window.ENSComponent_mapBox = mapRun;
