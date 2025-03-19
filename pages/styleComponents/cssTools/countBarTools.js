@@ -165,22 +165,37 @@ function initializeEditTools_countBar(toolsContainer) {
         }
   
         input.addEventListener("input", function(e) {
-          const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-          // Update the local group target.
-          group.target[control.key] = value;
-          console.log(`Updated ${group.groupName} ${control.key} to ${value}`);
-          // Update the state by merging new values into the countBar state.
-          const currentCountBar = globalState.getState().countBar;
-          const updatedCountBar = { ...currentCountBar };
-          // Find which group in state corresponds to this control.
-          // For simplicity, if the control belongs to this group, we assume the target reference is identical.
-          // Otherwise, you could compute this based on control mapping.
-          updatedCountBar[group.groupName.replace(" ", "").toLowerCase()] = group.target;
-          // In a real scenario, you may have a more precise mapping.
-          globalState.setState({ countBar: updatedCountBar });
-          // Call updatePreview to re-render the count bar preview.
-          updatePreview("countBar");
-        });
+            const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+            
+            // Determine which state property to update based on the group name.
+            let stateKey;
+            switch (group.groupName) {
+              case "Container Settings":
+                stateKey = "container";
+                break;
+              case "Current Count Block Settings":
+                stateKey = "currentBlock";
+                break;
+              case "Daily Count Block Settings":
+                stateKey = "dailyBlock";
+                break;
+              case "Yearly Count Block Settings":
+                stateKey = "yearlyBlock";
+                break;
+              case "Clock Settings":
+                stateKey = "clock";
+                break;
+              default:
+                console.error("Unknown group:", group.groupName);
+                return;
+            }
+            
+            const currentCountBar = globalState.getState().countBar;
+            const updatedGroup = { ...currentCountBar[stateKey], [control.key]: value };
+            globalState.setState({ countBar: { ...currentCountBar, [stateKey]: updatedGroup } });
+            console.log(`Updated ${group.groupName} ${control.key} to ${value}`);
+            updatePreview("countBar");
+          });
   
         controlDiv.appendChild(input);
         cell.appendChild(controlDiv);

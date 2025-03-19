@@ -21,18 +21,18 @@ export async function createCountBar(options) {
   let state = globalState.getState();
   if (!state.countBarLoaded) {
     try {
-      const response = await fetch(`https://matrix.911-ens-services.com/client/${clientKey}/countbar_styles`);
+      const response = await fetch(`https://matrix.911emergensee.com/client/${clientKey}/countbar_styles`);
       if (response.ok) {
         const savedStyles = await response.json();
-        if (savedStyles) {
+        if (savedStyles && Object.keys(savedStyles).length > 0) {
           console.log("Loaded saved styles:", savedStyles);
           globalState.setState({ countBar: savedStyles });
         } else {
-          console.log("No saved styles found; using provided defaults.");
+          console.log("No saved styles found; using defaults.");
           globalState.setState({ countBar: styles });
         }
       } else {
-        console.warn("GET countbar_styles returned non-OK status; using defaults.");
+        console.warn("GET countbar_styles returned non-OK; using defaults.");
         globalState.setState({ countBar: styles });
       }
     } catch (error) {
@@ -45,6 +45,9 @@ export async function createCountBar(options) {
   // Get the current countBar styles from state.
   state = globalState.getState();
   const currentStyles = state.countBar || styles;
+  console.log("Using countBar styles:", currentStyles);
+  const flatStyles = flattenStyles(currentStyles);
+  console.log("Flattened countBar styles:", flatStyles);
 
   // Clear previous content.
   rootDiv.innerHTML = "";
@@ -56,8 +59,8 @@ export async function createCountBar(options) {
   container.style.display = "flex";
   container.style.justifyContent = "space-around";
   container.style.alignItems = "center";
-  container.style.padding = currentStyles.container.padding + "px";
-  container.style.backgroundColor = currentStyles.container.backgroundColor;
+  container.style.padding = flatStyles.containerPadding;  // e.g., "10px"
+  container.style.backgroundColor = flatStyles.containerBackgroundColor;
   rootDiv.appendChild(container);
 
   // Create an inner wrapper.
@@ -67,23 +70,24 @@ export async function createCountBar(options) {
   countWrap.style.width = "100%";
   container.appendChild(countWrap);
 
-  // Helper to create a block section.
-  function createSection(id, text, blockStyles, defaultBg) {
+  // Helper to create a block section using flattened style keys.
+  // We expect flattenStyles to return keys like "currentBlockFontSize", etc.
+  function createSection(id, text, prefix, defaultBg) {
     const section = document.createElement("div");
     section.id = id;
     section.style.flex = "none";
-    section.style.margin = blockStyles.margin + "px";
-    section.style.padding = blockStyles.padding + "px";
-    section.style.borderRadius = blockStyles.borderRadius + "px";
-    section.style.border = blockStyles.borderThickness + "px solid " + blockStyles.borderColor;
-    section.style.backgroundColor = blockStyles.backgroundColor || defaultBg;
-    section.style.width = blockStyles.width + "%";
+    section.style.margin = flatStyles[prefix + "Margin"];
+    section.style.padding = flatStyles[prefix + "Padding"];
+    section.style.borderRadius = flatStyles[prefix + "BorderRadius"];
+    section.style.border = flatStyles[prefix + "BorderThickness"] + " solid " + flatStyles[prefix + "BorderColor"];
+    section.style.backgroundColor = flatStyles[prefix + "BackgroundColor"] || defaultBg;
+    section.style.width = flatStyles[prefix + "Width"];
     
     const textElem = document.createElement("h3");
     textElem.innerText = text;
-    textElem.style.fontSize = blockStyles.fontSize + "px";
-    textElem.style.color = blockStyles.textColor;
-    textElem.style.textAlign = blockStyles.textAlign || "center";
+    textElem.style.fontSize = flatStyles[prefix + "FontSize"];
+    textElem.style.color = flatStyles[prefix + "TextColor"];
+    textElem.style.textAlign = flatStyles[prefix + "TextAlign"] || "center";
     section.appendChild(textElem);
     return section;
   }
@@ -93,7 +97,7 @@ export async function createCountBar(options) {
   let yearCount = "";
 
   try {
-    const response = await fetch(`https://matrix.911emergensee.com/count/${clientKey}`);
+    const response = await fetch(`https://matrix.911-ens-services.com/count/${clientKey}`);
     const countData = await response.json();
     currentCount = countData.activeCount;
     dayCount = countData.currentDateCount;
@@ -114,32 +118,33 @@ export async function createCountBar(options) {
   );
 
   // Optionally, add a live clock.
-  if (currentStyles.clock.show) {
+  if (state.countBar.clock.show) {
     const clockSection = document.createElement("div");
     clockSection.id = "liveClock";
     clockSection.style.flex = "none";
-    clockSection.style.margin = currentStyles.clock.margin + "px";
-    clockSection.style.padding = currentStyles.clock.padding + "px";
-    clockSection.style.borderRadius = currentStyles.clock.borderRadius + "px";
-    clockSection.style.border = currentStyles.clock.borderThickness + "px solid " + currentStyles.clock.borderColor;
-    clockSection.style.backgroundColor = currentStyles.clock.backgroundColor;
-    clockSection.style.width = currentStyles.clock.width + "%";
+    clockSection.style.margin = flatStyles.clockMargin;
+    clockSection.style.padding = flatStyles.clockPadding;
+    clockSection.style.borderRadius = flatStyles.clockBorderRadius;
+    clockSection.style.border = flatStyles.clockBorderThickness + " solid " + flatStyles.clockBorderColor;
+    clockSection.style.backgroundColor = flatStyles.clockBackgroundColor;
+    clockSection.style.width = flatStyles.clockWidth;
     
     const clockText = document.createElement("h3");
-    clockText.style.fontSize = currentStyles.clock.fontSize + "px";
-    clockText.style.color = currentStyles.clock.textColor;
+    clockText.style.fontSize = flatStyles.clockFontSize;
+    clockText.style.color = flatStyles.clockTextColor;
     clockSection.appendChild(clockText);
     countWrap.appendChild(clockSection);
     
     function updateClock() {
       const now = new Date();
-      const options = { hour: "numeric", minute: "numeric", second: "numeric", hour12: (currentStyles.clock.hourFormat !== "24") };
+      const options = { hour: "numeric", minute: "numeric", second: "numeric", hour12: (state.countBar.clock.hourFormat !== "24") };
       clockText.innerText = now.toLocaleTimeString([], options);
     }
     updateClock();
     setInterval(updateClock, 1000);
   }
 
+  document.dispatchEvent(new CustomEvent("countBarStylesUpdated", { detail: currentStyles }));
   // Optionally, signal to the tools that the preview is rendered.
   // (This could be done via a callback or state change instead of a global event.)
 }
