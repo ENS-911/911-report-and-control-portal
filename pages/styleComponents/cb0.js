@@ -21,7 +21,7 @@ export async function createCountBar(options) {
   let state = globalState.getState();
   if (!state.countBarLoaded) {
     try {
-      const response = await fetch(`https://matrix.911emergensee.com/client/${clientKey}/countbar_styles`);
+      const response = await fetch(`https://matrix.911-ens-services.com/client/${clientKey}/countbar_styles`);
       if (response.ok) {
         const savedStyles = await response.json();
         if (savedStyles && Object.keys(savedStyles).length > 0) {
@@ -44,7 +44,7 @@ export async function createCountBar(options) {
   
   // Get the current countBar styles from state.
   state = globalState.getState();
-  const currentStyles = state.countBar || styles;
+  const currentStyles = (state.countBar && Object.keys(state.countBar).length > 0) ? state.countBar : styles;
   console.log("Using countBar styles:", currentStyles);
   const flatStyles = flattenStyles(currentStyles);
   console.log("Flattened countBar styles:", flatStyles);
@@ -73,6 +73,7 @@ export async function createCountBar(options) {
   // Helper to create a block section using flattened style keys.
   // We expect flattenStyles to return keys like "currentBlockFontSize", etc.
   function createSection(id, text, prefix, defaultBg) {
+    console.log('prefix check: ', prefix)
     const section = document.createElement("div");
     section.id = id;
     section.style.flex = "none";
@@ -108,14 +109,15 @@ export async function createCountBar(options) {
 
   // Create independent blocks.
   countWrap.appendChild(
-    createSection("currentCount", `CURRENT INCIDENTS: ${currentCount}`, currentStyles.currentBlock, "#ffcccc")
+      createSection("currentCount", `CURRENT INCIDENTS: ${currentCount}`, "currentBlock", "#ffcccc")
   );
   countWrap.appendChild(
-    createSection("dailyCount", `DAILY TOTAL INCIDENTS: ${dayCount}`, currentStyles.dailyBlock, "#ccffcc")
+      createSection("dailyCount", `DAILY TOTAL INCIDENTS: ${dayCount}`, "dailyBlock", "#ccffcc")
   );
   countWrap.appendChild(
-    createSection("yearlyCount", `YEARLY INCIDENTS: ${yearCount}`, currentStyles.yearlyBlock, "#ccccff")
+      createSection("yearlyCount", `YEARLY INCIDENTS: ${yearCount}`, "yearlyBlock", "#ccccff")
   );
+
 
   // Optionally, add a live clock.
   if (state.countBar.clock.show) {
@@ -144,9 +146,10 @@ export async function createCountBar(options) {
     setInterval(updateClock, 1000);
   }
 
-  document.dispatchEvent(new CustomEvent("countBarStylesUpdated", { detail: currentStyles }));
-  // Optionally, signal to the tools that the preview is rendered.
-  // (This could be done via a callback or state change instead of a global event.)
+  document.addEventListener('countBarStylesUpdated', (e) => {
+    console.log("Tool UI syncing with styles:", e.detail);
+    syncToolUI(e.detail);  // Your function to update input values.
+  });
 }
 
 export function getCurrentStyles() {

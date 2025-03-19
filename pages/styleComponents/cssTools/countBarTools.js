@@ -168,28 +168,28 @@ function initializeEditTools_countBar(toolsContainer) {
             const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
             
             // Determine which state property to update based on the group name.
-            let stateKey;
+            let stateKey = "";
             switch (group.groupName) {
-              case "Container Settings":
+                case "Container Settings":
                 stateKey = "container";
                 break;
-              case "Current Count Block Settings":
+                case "Current Count Block Settings":
                 stateKey = "currentBlock";
                 break;
-              case "Daily Count Block Settings":
+                case "Daily Count Block Settings":
                 stateKey = "dailyBlock";
                 break;
-              case "Yearly Count Block Settings":
+                case "Yearly Count Block Settings":
                 stateKey = "yearlyBlock";
                 break;
-              case "Clock Settings":
+                case "Clock Settings":
                 stateKey = "clock";
                 break;
-              default:
+                default:
                 console.error("Unknown group:", group.groupName);
                 return;
             }
-            
+
             const currentCountBar = globalState.getState().countBar;
             const updatedGroup = { ...currentCountBar[stateKey], [control.key]: value };
             globalState.setState({ countBar: { ...currentCountBar, [stateKey]: updatedGroup } });

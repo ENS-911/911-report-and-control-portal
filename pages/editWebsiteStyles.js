@@ -156,16 +156,15 @@ function updatePreview(componentId) {
     return;
   }
   
-  let styles = {};
   if (componentId === "countBar") {
-    styles = flattenStyles(globalState.getState().countBar);
-    createCountBar({ rootDiv: previewContainer, styles });
+    const currentStyles = globalState.getState().countBar;
+    const flatStyles = flattenStyles(currentStyles);
+    createCountBar({ rootDiv: previewContainer, styles: flatStyles });
   } else if (componentId === "mapBox") {
-    styles = { ...globalState.getState().mapBox };
-    mapRun({ rootDiv: previewContainer, styles });
+    const currentStyles = { ...globalState.getState().mapBox };
+    mapRun({ rootDiv: previewContainer, styles: currentStyles });
   } else {
-    console.error(`No update function defined for component: ${componentId}`);
-    return;
+    console.error(`No update logic for component: ${componentId}`);
   }
 }
 
