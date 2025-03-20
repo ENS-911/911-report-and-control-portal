@@ -2,6 +2,9 @@
 import { globalState } from "../../../reactive/state.js";
 import { updatePreview } from "../../editWebsiteStyles.js"; // adjust path as needed
 
+const user = JSON.parse(localStorage.getItem("user"));
+const clientKey = user ? user.key : null;
+
 // We'll assume that if no countBar styles are present in state, you want to initialize them with defaults.
 const defaultCountBarStyles = {
   container: { padding: "10", backgroundColor: "#222" },
@@ -12,15 +15,13 @@ const defaultCountBarStyles = {
 };
 
 // Ensure state is initialized (this is one option; you may already do this in state.js)
-if (!globalState.getState().countBar) {
-  globalState.setState({ countBar: defaultCountBarStyles });
+if (!globalState.getState().countBarLoaded) {
+    const loadedStyles = await loadCountBarStyles(clientKey, defaultCountBarStyles);
+    globalState.setState({ countBar: loadedStyles, countBarLoaded: true });
 }
 
 // Define the function to build the tools UI.
 function initializeEditTools_countBar(toolsContainer) {
-  console.log("initializeEditTools_countBar called");
-  
-  // Get the current styles from state.
   const currentStyles = globalState.getState().countBar;
   
   const groups = [
@@ -209,6 +210,23 @@ function initializeEditTools_countBar(toolsContainer) {
   table.appendChild(tbody);
   toolsContainer.innerHTML = "";
   toolsContainer.appendChild(table);
+}
+
+async function loadCountBarStyles(clientKey, defaultStyles) {
+    try {
+      const response = await fetch(`https://matrix.911-ens-services.com/client/${clientKey}/countbar_styles`);
+      if (response.ok) {
+        const savedStyles = await response.json();
+        // Merge savedStyles over defaultStyles. This ensures any missing properties get defaults.
+        return { ...defaultStyles, ...savedStyles };
+      } else {
+        console.warn("GET countbar_styles returned non-OK; using defaults.");
+        return defaultStyles;
+      }
+    } catch (error) {
+      console.error("Error fetching saved styles:", error);
+      return defaultStyles;
+    }
 }
 
 export { initializeEditTools_countBar };
