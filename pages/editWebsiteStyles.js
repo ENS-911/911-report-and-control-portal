@@ -88,6 +88,7 @@ function loadPage() {
   
   // After page load, add a save button when the count bar preview is ready.
   addSaveButtonWhenReady();
+  addMapSaveButtonWhenReady()
 }
 
 function addSaveButtonWhenReady() {
@@ -141,6 +142,76 @@ function addSaveButton() {
       .catch(error => {
         console.error("Error saving styles:", error);
         alert("Error saving styles. Please try again.");
+      });
+  });
+  
+  toolsContainer.appendChild(saveBtn);
+}
+
+// Save button for the map section
+
+function addMapSaveButtonWhenReady() {
+  // Get the map preview container.
+  const previewContainer = document.getElementById("componentContainer-mapBox");
+  if (!previewContainer) {
+    console.error("Map preview container not found");
+    return;
+  }
+  
+  // Use a MutationObserver to wait until the map is rendered (we check for an element with id "map")
+  const observer = new MutationObserver((mutations, obs) => {
+    if (document.getElementById("map")) {
+      console.log("Map found; adding Save Map Styles button");
+      addMapSaveButton();
+      obs.disconnect();
+    }
+  });
+  
+  observer.observe(previewContainer, { childList: true, subtree: true });
+}
+
+function addMapSaveButton() {
+  // Get the map tools container.
+  const toolsContainer = document.getElementById("toolsContainer-mapBox");
+  if (!toolsContainer) {
+    console.error("Map tools container not found");
+    return;
+  }
+  
+  // Prevent duplicate save buttons.
+  if (document.getElementById("saveMapStylesBtn")) return;
+  
+  // Create the button.
+  const saveBtn = document.createElement("button");
+  saveBtn.id = "saveMapStylesBtn";
+  saveBtn.innerText = "Save Map Styles";
+  saveBtn.style.padding = "10px 20px";
+  saveBtn.style.marginTop = "10px";
+  saveBtn.style.cursor = "pointer";
+  
+  // When clicked, send the current map styles to your API.
+  saveBtn.addEventListener("click", () => {
+    // Assume globalState holds your map styles under the "mapBox" key.
+    const currentMapStyles = globalState.getState().mapBox;
+    // Construct your API endpoint for map styles. (Adjust the URL as needed.)
+    fetch(`https://matrix.911-ens-services.com/client/${clientKey}/map_styles`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentMapStyles)
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Failed to save map styles, status: " + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Map styles saved successfully:", data);
+        alert("Map styles saved successfully.");
+      })
+      .catch(error => {
+        console.error("Error saving map styles:", error);
+        alert("Error saving map styles. Please try again.");
       });
   });
   
