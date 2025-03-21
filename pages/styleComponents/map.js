@@ -11,6 +11,32 @@ let warningData = [];
 let watch = [];
 let weatherData = "";
 
+const user = JSON.parse(localStorage.getItem("user"));
+const clientKey = user ? user.key : null;
+
+const defaultMapStyles = {
+  mapHeight: 800,
+  mapboxStyle: "mapbox://styles/mapbox/streets-v12"
+};
+
+async function loadMapStyles(clientKey) {
+  try {
+    const response = await fetch(`https://matrix.911-ens-services.com/client/${clientKey}/map_styles`);
+    if (response.ok) {
+      const savedStyles = await response.json();
+      return (savedStyles && Object.keys(savedStyles).length > 0)
+        ? savedStyles
+        : defaultMapStyles;
+    } else {
+      console.warn("GET map_styles returned non-OK; using defaults.");
+      return defaultMapStyles;
+    }
+  } catch (error) {
+    console.error("Error fetching map styles:", error);
+    return defaultMapStyles;
+  }
+}
+
 function loadScript(url) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${url}"]`)) {
@@ -70,20 +96,25 @@ export async function mapRun(options) {
     console.error("No container provided for mapRun");
     return;
   }
-  container.innerHTML = ""
+
   await loadDependencies();
 
-  // Use state for map styles; fallback to default values.
-  const stateMapStyles = globalState.getState().mapBox || {
-    mapHeight: 800,
-    mapboxStyle: "mapbox://styles/mapbox/standard"
-  };
+  let state = globalState.getState();
+  if (!state.mapBoxLoaded) {
+    const loadedStyles = await loadMapStyles(clientKey);
+    globalState.setState({ mapBox: loadedStyles, mapBoxLoaded: true });
+  }
+  state = globalState.getState();
+  const currentMapStyles = state.mapBox || defaultMapStyles;
+
+  container.innerHTML = ""
+  
 
   if (!map) {
     const mapArea = document.createElement("div");
     mapArea.id = "map";
     mapArea.style.width = "100%";
-    mapArea.style.height = height ? height : stateMapStyles.mapHeight + "px";
+    mapArea.style.height = height ? height : currentMapStyles.mapHeight + "px";
     container.appendChild(mapArea);
 
     mapboxgl.accessToken = 'pk.eyJ1Ijoid29tYmF0MTk3MiIsImEiOiJjbDdycmxjNXIwaTJ1M3BudXB2ZTZoZm1tIn0.v-NAvl8Ba0yPtAtxOt9iTg';
@@ -155,7 +186,7 @@ export async function mapRun(options) {
   function mapDraw() {
     map = new mapboxgl.Map({
       container: "map",
-      style: stateMapStyles.mapboxStyle,
+      style: currentMapStyles.mapboxStyle,
       center: [longitude, latitude],
       zoom: 10
     });

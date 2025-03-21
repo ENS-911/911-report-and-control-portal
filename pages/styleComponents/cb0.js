@@ -13,7 +13,6 @@ export async function createCountBar(options) {
   // Retrieve client key from localStorage ("user" object).
   const user = JSON.parse(localStorage.getItem("user"));
   const clientKey = user ? user.key : null;
-  console.log("The key from cb0:", clientKey);
 
   const { rootDiv, styles = {} } = options;
 
