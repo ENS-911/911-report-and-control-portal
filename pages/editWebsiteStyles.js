@@ -4,6 +4,8 @@ import { createCountBar } from "../pages/styleComponents/cb0.js";
 import { initializeEditTools_countBar } from "../pages/styleComponents/cssTools/countBarTools.js";
 import { mapRun } from "../pages/styleComponents/map.js";
 import { initializeEditTools_mapBox } from "../pages/styleComponents/cssTools/mapTools.js";
+import { createSortBar } from "../pages/styleComponents/sb0.js";
+import { initializeEditTools_sortBar } from "../pages/styleComponents/cssTools/sbTools.js";
 
 const user = JSON.parse(localStorage.getItem('user'));
 const clientKey = user ? user.key : null;
@@ -24,6 +26,14 @@ const availableComponents = [
     tools: initializeEditTools_mapBox,
     componentContainerId: "componentContainer-mapBox",  
     toolsContainerId: "toolsContainer-mapBox"
+  },
+  { 
+    id: "sortBar",
+    name: "Sort Bar",
+    component: createSortBar,
+    tools: initializeEditTools_sortBar,
+    componentContainerId: "componentContainer-sortBar",
+    toolsContainerId: "toolsContainer-sortBar"
   }
 ];
 
@@ -35,14 +45,12 @@ function loadPage() {
   }
   
   availableComponents.forEach(component => {
-    // Create section container.
     const section = document.createElement("div");
     section.id = `section-${component.id}`;
     section.classList.add("component-section");
     section.style.width = "100%";
     section.style.marginTop = "15px";
-    
-    // Create title element.
+
     const title = document.createElement("h2");
     title.innerText = component.name;
     title.style.width = "100%";
@@ -50,8 +58,7 @@ function loadPage() {
     title.style.padding = "8px 0";
     title.style.textAlign = "center";
     section.appendChild(title);
-    
-    // Create the component preview container.
+
     const compContainer = document.createElement("div");
     compContainer.id = component.componentContainerId;
     compContainer.classList.add("component-container");
@@ -59,34 +66,27 @@ function loadPage() {
     compContainer.style.padding = "20px";
     compContainer.style.backgroundColor = "#ffffff";
     section.appendChild(compContainer);
-    
-    // Create the tools container.
+
     const toolsContainer = document.createElement("div");
     toolsContainer.id = component.toolsContainerId;
     toolsContainer.classList.add("tools-container");
     toolsContainer.style.marginTop = "10px";
     section.appendChild(toolsContainer);
-    
-    // Append section to the stage.
+
     setStage.appendChild(section);
-    
-    // Determine the styles for this component.
+
     let styles = {};
     if (component.id === "countBar") {
       styles = flattenStyles(globalState.getState().countBar);
     } else if (component.id === "mapBox") {
-      // For map, if flattening isn't needed:
       styles = { ...globalState.getState().mapBox };
     }
-    
-    // Render the component preview.
+
     component.component({ rootDiv: compContainer, styles });
-    
-    // Initialize the tools UI.
+
     component.tools(toolsContainer);
   });
-  
-  // After page load, add a save button when the count bar preview is ready.
+
   addSaveButtonWhenReady();
   addMapSaveButtonWhenReady()
 }
@@ -148,17 +148,13 @@ function addSaveButton() {
   toolsContainer.appendChild(saveBtn);
 }
 
-// Save button for the map section
-
 function addMapSaveButtonWhenReady() {
-  // Get the map preview container.
   const previewContainer = document.getElementById("componentContainer-mapBox");
   if (!previewContainer) {
     console.error("Map preview container not found");
     return;
   }
-  
-  // Use a MutationObserver to wait until the map is rendered (we check for an element with id "map")
+
   const observer = new MutationObserver((mutations, obs) => {
     if (document.getElementById("map")) {
       console.log("Map found; adding Save Map Styles button");
@@ -171,29 +167,23 @@ function addMapSaveButtonWhenReady() {
 }
 
 function addMapSaveButton() {
-  // Get the map tools container.
   const toolsContainer = document.getElementById("toolsContainer-mapBox");
   if (!toolsContainer) {
     console.error("Map tools container not found");
     return;
   }
-  
-  // Prevent duplicate save buttons.
+
   if (document.getElementById("saveMapStylesBtn")) return;
-  
-  // Create the button.
+
   const saveBtn = document.createElement("button");
   saveBtn.id = "saveMapStylesBtn";
   saveBtn.innerText = "Save Map Styles";
   saveBtn.style.padding = "10px 20px";
   saveBtn.style.marginTop = "10px";
   saveBtn.style.cursor = "pointer";
-  
-  // When clicked, send the current map styles to your API.
+
   saveBtn.addEventListener("click", () => {
-    // Assume globalState holds your map styles under the "mapBox" key.
     const currentMapStyles = globalState.getState().mapBox;
-    // Construct your API endpoint for map styles. (Adjust the URL as needed.)
     fetch(`https://matrix.911-ens-services.com/client/${clientKey}/map_styles`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
