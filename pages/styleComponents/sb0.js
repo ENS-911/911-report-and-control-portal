@@ -9,7 +9,7 @@
  * @param {Array} options.activeData - The full dataset to use for filtering.
  */
 export function createSortBar(options) {
-    const { rootDiv, updateTable, updateMap, hasMap = false, activeData } = options;
+    const { rootDiv, updateTable, updateMap, hasMap = false, activeData = [] } = options;
     
     // Create the sort bar container.
     const sortBarDiv = document.createElement("div");
