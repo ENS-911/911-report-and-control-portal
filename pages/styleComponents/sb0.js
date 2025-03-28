@@ -187,5 +187,5 @@ export function createSortBar(options) {
       });
       dropdown.value = selectedValue || "all";
     }
-  }
+}
   
